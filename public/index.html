@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Automated Macroeconomic Dashboard</title>
+  <style>
+    :root {
+      --bg: #f5f6f3;
+      --panel: #ffffff;
+      --ink: #18201f;
+      --muted: #61706b;
+      --line: #d9dfd9;
+      --green: #0d765f;
+      --amber: #b97616;
+      --red: #b43a34;
+      --blue: #285c8f;
+      --purple: #6954a3;
+      --shadow: 0 14px 30px rgba(24, 32, 31, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    header {
+      background: #fbfcfa;
+      border-bottom: 1px solid var(--line);
+      padding: 22px 28px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 3;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      font-size: 25px;
+      line-height: 1.15;
+      margin: 0;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      max-width: 880px;
+    }
+
+    .meta {
+      text-align: right;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    main {
+      max-width: 1520px;
+      margin: 0 auto;
+      padding: 22px 28px 36px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .metric, .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .metric {
+      min-height: 104px;
+      padding: 14px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 25px;
+      line-height: 1.05;
+    }
+
+    .metric small {
+      display: block;
+      color: var(--muted);
+      margin-top: 9px;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 15px 16px 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    input, select {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 13px;
+      min-height: 36px;
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 10px 11px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    th {
+      font-size: 12px;
+      color: var(--muted);
+      background: #fbfcfa;
+    }
+
+    td small {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 3px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 4px 8px;
+      min-width: 82px;
+      font-weight: 760;
+      font-size: 12px;
+    }
+
+    .hot { background: #f7dfdc; color: var(--red); }
+    .warm { background: #faedd7; color: var(--amber); }
+    .cool { background: #e5f2ee; color: var(--green); }
+    .neutral { background: #e7eef6; color: var(--blue); }
+    .special { background: #ece8f7; color: var(--purple); }
+    .up { background: #e5f2ee; color: var(--green); }
+    .down { background: #f7dfdc; color: var(--red); }
+    .flat { background: #e7eef6; color: var(--blue); }
+
+    .signal {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 7px;
+      align-items: center;
+      min-width: 150px;
+    }
+
+    .bar {
+      height: 8px;
+      border-radius: 999px;
+      background: #edf0ed;
+      overflow: hidden;
+    }
+
+    .bar i {
+      display: block;
+      height: 100%;
+      background: var(--green);
+    }
+
+    .bar.warm i { background: var(--amber); }
+    .bar.hot i { background: var(--red); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .section {
+      margin-top: 18px;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .mini-kicker {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      margin-top: 3px;
+    }
+
+    .note-list {
+      padding: 12px 14px 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .note {
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--blue);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .note.red { border-left-color: var(--red); }
+    .note.amber { border-left-color: var(--amber); }
+    .note.green { border-left-color: var(--green); }
+
+    .note strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .note span, .sources {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .sources {
+      padding: 12px 16px 16px;
+    }
+
+    .sources a {
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .refresh-note {
+      margin-top: 9px;
+      padding-top: 9px;
+      border-top: 1px solid var(--line);
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    @media (max-width: 1100px) {
+      .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .layout, .split { grid-template-columns: 1fr; }
+      .meta { text-align: left; }
+    }
+
+    @media (max-width: 620px) {
+      header, main { padding-left: 15px; padding-right: 15px; }
+      .metric-grid { grid-template-columns: 1fr; }
+      .panel-head { align-items: flex-start; flex-direction: column; }
+      input, select { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <div>
+        <h1>Automated Macroeconomic Dashboard</h1>
+        <p class="subtitle">One combined market document for the UK, Asia, major global markets, Nigeria, and major African markets. Separate regional workflows are removed; filters are available inside the same table.</p>
+      </div>
+      <div class="meta">
+        Daily data refresh: 25 Jun 2026<br>
+        Inflation: latest comparable annual CPI baseline<br>
+        Policy rate: latest listed central bank rate<br>
+        <a id="excel-link" href="daily_exports/macro_daily_export_2026-06-25.xlsx">Open latest Excel export</a><br>
+        <a href="data/latest-export.json">Open latest data JSON</a>
+        <div class="refresh-note" id="refresh-note">Hosted data updates weekdays after UK close. Refresh this page after 17:05 London time.</div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="metric-grid">
+      <div class="metric"><span>Markets covered</span><strong id="market-count">0</strong><small>UK, G7, Asia, LatAm, and Africa in one view</small></div>
+      <div class="metric"><span>Highest policy rate</span><strong id="top-rate">0%</strong><small id="top-rate-name">Across tracked markets</small></div>
+      <div class="metric"><span>Highest inflation</span><strong id="top-inflation">0%</strong><small id="top-inflation-name">Latest annual CPI baseline</small></div>
+      <div class="metric"><span>Lowest inflation</span><strong id="low-inflation">0%</strong><small id="low-inflation-name">Template current CPI</small></div>
+      <div class="metric"><span>Hawkish / hike risk</span><strong id="hawkish-count">0</strong><small>Hot temperature or hike-risk label</small></div>
+      <div class="metric"><span>Average real rate</span><strong id="avg-real">0%</strong><small>Policy rate minus inflation baseline</small></div>
+      <div class="metric"><span>Commodities tracked</span><strong id="commodity-count">0</strong><small>USD-denominated futures prices</small></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Single Market Monitor</h2>
+        <div class="toolbar">
+          <input id="search" type="search" placeholder="Search market">
+          <select id="region">
+            <option value="All">All regions</option>
+            <option value="UK & G7">UK & G7</option>
+            <option value="Asia">Asia</option>
+            <option value="Africa">Africa</option>
+            <option value="LatAm">LatAm</option>
+          </select>
+          <select id="temperature">
+            <option value="All">All temperatures</option>
+            <option value="Hot">Hot</option>
+            <option value="Warm">Warm</option>
+            <option value="Neutral">Neutral</option>
+            <option value="Cool">Cool</option>
+            <option value="Special">Special</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Market</th>
+              <th>Region</th>
+              <th>Inflation</th>
+              <th>Policy Rate</th>
+              <th>Real Rate</th>
+              <th>Gini</th>
+              <th>Temperature</th>
+              <th>Bias</th>
+              <th>Pressure</th>
+              <th>Watch Item</th>
+            </tr>
+          </thead>
+          <tbody id="market-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel section">
+      <div class="panel-head">
+        <div>
+          <h2>Macro Release Matrix</h2>
+          <div class="mini-kicker">Each cell shows Previous / Current / Forecast / Change from the attached Excel template.</div>
+        </div>
+        <span class="badge warm">CPI focus</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Currency</th>
+              <th>Market</th>
+              <th>CPI YoY</th>
+              <th>GDP YoY</th>
+              <th>Manufacturing PMI</th>
+              <th>Services PMI</th>
+              <th>Unemployment</th>
+              <th>Business Confidence</th>
+            </tr>
+          </thead>
+          <tbody id="macro-matrix-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="split">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Daily FX And Commodity Prices</h2>
+            <div class="mini-kicker">Open and latest close, priced in USD where applicable.</div>
+          </div>
+          <span class="badge neutral">Yahoo chart feed</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Asset</th>
+                <th>Symbol</th>
+                <th>Date</th>
+                <th>Open</th>
+                <th>Close</th>
+                <th>Move</th>
+              </tr>
+            </thead>
+            <tbody id="asset-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Economic Calendar Highlights</h2>
+            <div class="mini-kicker">Previous, Last/Forecast, change, and signal from the attached workbook.</div>
+          </div>
+          <span class="badge warm">Excel template</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Currency</th>
+                <th>Indicator</th>
+                <th>Compare</th>
+                <th>Value</th>
+                <th>Change</th>
+                <th>Signal</th>
+              </tr>
+            </thead>
+            <tbody id="calendar-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Automation Rules In This Document</h2>
+          <span class="badge neutral">Shared logic</span>
+        </div>
+        <div class="note-list">
+          <div class="note red"><strong>Hot</strong><span>Inflation is high, policy rates are high, or the real-rate gap is still negative enough that credibility and currency pressure matter.</span></div>
+          <div class="note amber"><strong>Warm</strong><span>Policy is restrictive or inflation is still above target, but the next move is more balanced.</span></div>
+          <div class="note green"><strong>Cool</strong><span>Inflation is subdued or policy has room to ease; watch for weak demand and currency effects.</span></div>
+          <div class="note"><strong>Neutral</strong><span>Policy is neither clearly hawkish nor clearly easing based on the current simplified rule set.</span></div>
+          <div class="note"><strong>Special</strong><span>Monetary policy is not best represented by a simple policy-rate lens, such as Singapore's exchange-rate-band framework.</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Sources</h2>
+          <span class="badge neutral">Live-ready</span>
+        </div>
+        <div class="sources">
+          Inflation values use the latest comparable annual CPI baseline from the World Bank table as surfaced in the country inflation list. Policy rates use the latest central bank rate list, which cites central-bank decisions and dates. Production automation should replace these static values with direct APIs from ONS, BoE, IMF, World Bank, OECD, central banks, and national statistics agencies.
+          <br><br>
+          <a href="https://en.wikipedia.org/wiki/List_of_countries_by_inflation_rate">Inflation reference</a><br>
+          <a href="https://en.wikipedia.org/wiki/List_of_countries_by_central_bank_interest_rates">Policy-rate reference</a><br>
+          <a href="https://developer.ons.gov.uk/">ONS API</a><br>
+          <a href="https://www.bankofengland.co.uk/boeapps/database/help.asp">Bank of England IADB</a><br>
+          <a href="https://api.worldbank.org/">World Bank API</a><br>
+          <a href="https://data.imf.org/">IMF Data</a><br>
+          <a href="https://query1.finance.yahoo.com/v8/finance/chart/GBPUSD%3DX?range=5d&interval=1d">Yahoo chart feed example</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const markets = [
+      { market: "United Kingdom", region: "UK & G7", inflation: 3.3, rate: 3.75, temp: "Warm", bias: "Hold / easing watch", pressure: 62, watch: "Services inflation, wages, growth drag" },
+      { market: "United States", region: "UK & G7", inflation: 2.9, rate: 3.75, temp: "Warm", bias: "Hold / slow easing", pressure: 60, watch: "Core inflation, labour market cooling" },
+      { market: "Euro Area", region: "UK & G7", inflation: 2.4, rate: 2.40, temp: "Neutral", bias: "Hold", pressure: 48, watch: "Growth softness, wage pass-through" },
+      { market: "Japan", region: "Asia", inflation: 2.7, rate: 1.00, temp: "Warm", bias: "Hike risk", pressure: 66, watch: "Wages, yen, imported inflation" },
+      { market: "China", region: "Asia", inflation: 0.2, rate: 3.00, temp: "Cool", bias: "Easing / support", pressure: 34, watch: "Deflation risk, property, credit demand" },
+      { market: "India", region: "Asia", inflation: 5.0, rate: 5.25, temp: "Warm", bias: "Hold", pressure: 58, watch: "Food prices, rupee, oil" },
+      { market: "South Korea", region: "Asia", inflation: 2.3, rate: 2.50, temp: "Neutral", bias: "Hold / easing watch", pressure: 47, watch: "Exports, won, household debt" },
+      { market: "Taiwan", region: "Asia", inflation: 2.0, rate: 2.00, temp: "Neutral", bias: "Hold", pressure: 45, watch: "Semis cycle, TWD, imported prices" },
+      { market: "Singapore", region: "Asia", inflation: 2.4, rate: null, temp: "Special", bias: "FX-band policy", pressure: 42, watch: "MAS exchange-rate stance" },
+      { market: "Hong Kong", region: "Asia", inflation: 1.7, rate: 4.00, temp: "Warm", bias: "Fed-linked hold", pressure: 57, watch: "HKD peg, property, liquidity" },
+      { market: "Australia", region: "UK & G7", inflation: 3.2, rate: 4.35, temp: "Warm", bias: "Hold / hike risk", pressure: 65, watch: "Housing, wages, trimmed mean CPI" },
+      { market: "Canada", region: "UK & G7", inflation: 2.4, rate: 2.25, temp: "Neutral", bias: "Hold", pressure: 44, watch: "Shelter CPI, consumption" },
+      { market: "Brazil", region: "LatAm", inflation: 4.4, rate: 14.25, temp: "Hot", bias: "Restrictive / easing slow", pressure: 78, watch: "Fiscal risk, currency, expectations" },
+      { market: "Mexico", region: "LatAm", inflation: 4.7, rate: 6.50, temp: "Warm", bias: "Restrictive hold", pressure: 67, watch: "Peso, services inflation, Banxico tone" },
+      { market: "Nigeria", region: "Africa", inflation: 33.2, rate: 26.50, temp: "Hot", bias: "Hawkish / credibility", pressure: 92, watch: "FX liquidity, food CPI, reserves" },
+      { market: "South Africa", region: "Africa", inflation: 4.4, rate: 7.00, temp: "Warm", bias: "Hold", pressure: 61, watch: "Rand, electricity, fiscal risk" },
+      { market: "Egypt", region: "Africa", inflation: 28.3, rate: 19.00, temp: "Hot", bias: "Hawkish / FX risk", pressure: 88, watch: "Currency pass-through, food CPI" },
+      { market: "Kenya", region: "Africa", inflation: 4.5, rate: 8.75, temp: "Warm", bias: "Restrictive hold", pressure: 64, watch: "Shilling, debt service, food prices" },
+      { market: "Ghana", region: "Africa", inflation: 22.8, rate: 14.00, temp: "Hot", bias: "Hawkish / stabilization", pressure: 84, watch: "Cedi, fiscal consolidation, IMF path" },
+      { market: "Morocco", region: "Africa", inflation: 1.0, rate: 2.25, temp: "Neutral", bias: "Hold", pressure: 36, watch: "Food, rainfall, external demand" },
+      { market: "Angola", region: "Africa", inflation: 28.2, rate: 17.00, temp: "Hot", bias: "Hawkish / oil-linked", pressure: 86, watch: "Kwanza, oil revenue, food CPI" },
+      { market: "Ethiopia", region: "Africa", inflation: 21.0, rate: 15.00, temp: "Hot", bias: "Hawkish / data watch", pressure: 79, watch: "FX reform, food, official data lag" },
+      { market: "Cote d'Ivoire", region: "Africa", inflation: 3.5, rate: 3.25, temp: "Neutral", bias: "Regional hold", pressure: 43, watch: "WAEMU policy, cocoa, fiscal path" },
+      { market: "Rwanda", region: "Africa", inflation: 1.8, rate: 8.25, temp: "Warm", bias: "Restrictive", pressure: 55, watch: "Food, currency, credit growth" }
+    ];
+
+    const templateIndicators = [{"currency":"AUD","market":"Australia","cpi":{"previous":3.7,"current":4.6,"forecast":4.9,"change":0.8999999999999995},"gdp":{"previous":2.1,"current":2.6,"forecast":2,"change":0.5},"man_pmi":{"previous":49.8,"current":51.3,"forecast":50,"change":3.0120481927710845},"serv_pmi":{"previous":46.3,"current":50.7,"forecast":49,"change":9.503239740820748},"unemp":{"previous":4.3,"current":4.3,"forecast":4.4,"change":0},"bus_conf":{"previous":4,"current":-29,"forecast":-34,"change":-825}},{"currency":"CAD","market":"Canada","cpi":{"previous":1.8,"current":2.4,"forecast":2.8,"change":0.5999999999999999},"gdp":{"previous":1.6,"current":0.7,"forecast":1.3,"change":-0.9000000000000001},"man_pmi":{"previous":50,"current":53.3,"forecast":50.1,"change":6.599999999999994},"serv_pmi":{"previous":47.2,"current":49.2,"forecast":50.3,"change":4.23728813559322},"unemp":{"previous":6.7,"current":6.9,"forecast":7,"change":0.20000000000000018},"bus_conf":{"previous":49.7,"current":57.7,"forecast":50,"change":16.096579476861166}},{"currency":"CHF","market":"Switzerland","cpi":{"previous":0.3,"current":0.6,"forecast":1,"change":0.3},"gdp":{"previous":0.9,"current":0.8,"forecast":1.2,"change":-0.09999999999999998},"man_pmi":{"previous":53.3,"current":54.5,"forecast":48.8,"change":2.2514071294559157},"serv_pmi":{"previous":57.2,"current":54.8,"forecast":51.5,"change":-4.195804195804206},"unemp":{"previous":3.1,"current":3,"forecast":2.9,"change":-0.10000000000000009},"bus_conf":{"previous":96,"current":98,"forecast":101,"change":2.083333333333333}},{"currency":"EUR","market":"Euro Area","cpi":{"previous":2.6,"current":3,"forecast":3,"change":0.3999999999999999},"gdp":{"previous":1.2,"current":0.8,"forecast":1.1,"change":-0.3999999999999999},"man_pmi":{"previous":51.6,"current":52.2,"forecast":52.3,"change":1.1627906976744213},"serv_pmi":{"previous":50.2,"current":47.6,"forecast":46,"change":-5.179282868525899},"unemp":{"previous":6.3,"current":6.2,"forecast":6.2,"change":-0.09999999999999964},"bus_conf":{"previous":-0.27,"current":-0.28,"forecast":-0.7,"change":-3.703703703703707}},{"currency":"GBP","market":"United Kingdom","cpi":{"previous":3,"current":3.3,"forecast":3.6,"change":0.2999999999999998},"gdp":{"previous":1.3,"current":1,"forecast":1.6,"change":-0.30000000000000004},"man_pmi":{"previous":51,"current":53.7,"forecast":51.3,"change":5.294117647058829},"serv_pmi":{"previous":50.5,"current":52.7,"forecast":51.9,"change":4.356435643564362},"unemp":{"previous":5.2,"current":4.9,"forecast":5.2,"change":-0.2999999999999998},"bus_conf":{"previous":-19,"current":-65,"forecast":-20,"change":-242.10526315789474}},{"currency":"JPY","market":"Japan","cpi":{"previous":1.3,"current":1.5,"forecast":2.2,"change":0.19999999999999996},"gdp":{"previous":0.6,"current":0.1,"forecast":-0.5,"change":-0.5},"man_pmi":{"previous":51.6,"current":55.1,"forecast":50.8,"change":6.782945736434108},"serv_pmi":{"previous":53.4,"current":51,"forecast":51.3,"change":-4.494382022471908},"unemp":{"previous":2.6,"current":2.7,"forecast":2.7,"change":0.10000000000000009},"bus_conf":{"previous":16,"current":17,"forecast":13,"change":6.25}},{"currency":"NZD","market":"New Zealand","cpi":{"previous":3.1,"current":3.1,"forecast":4.5,"change":0},"gdp":{"previous":1.1,"current":1.3,"forecast":1.2,"change":0.19999999999999996},"man_pmi":{"previous":54.8,"current":53.2,"forecast":51.3,"change":-2.91970802919707},"serv_pmi":{"previous":47.6,"current":46,"forecast":51,"change":-3.3613445378151288},"unemp":{"previous":5.4,"current":5.3,"forecast":5.5,"change":-0.10000000000000053},"bus_conf":{"previous":32.5,"current":-10.6,"forecast":32,"change":-132.6153846153846}},{"currency":"USD","market":"United States","cpi":{"previous":2.4,"current":3.3,"forecast":3.9,"change":0.8999999999999999},"gdp":{"previous":0.5,"current":2,"forecast":1.1,"change":1.5},"man_pmi":{"previous":52.3,"current":54.5,"forecast":51.3,"change":4.20650095602295},"serv_pmi":{"previous":49.8,"current":51,"forecast":50.4,"change":2.409638554216873},"unemp":{"previous":4.4,"current":4.3,"forecast":4.6,"change":-0.10000000000000053},"bus_conf":{"previous":52.7,"current":52.7,"forecast":51,"change":0}}];
+
+    const giniData = {"United Kingdom":{"value":32.4,"year":"2021"},"United States":{"value":41.8,"year":"2024"},"Euro Area":null,"Japan":{"value":32.3,"year":"2020"},"China":{"value":36,"year":"2022"},"India":{"value":25.5,"year":"2022"},"South Korea":{"value":32.9,"year":"2021"},"Taiwan":null,"Singapore":null,"Hong Kong":null,"Australia":{"value":33.8,"year":"2020"},"Canada":{"value":31.5,"year":"2022"},"Brazil":{"value":50.3,"year":"2024"},"Mexico":{"value":42.6,"year":"2024"},"Nigeria":{"value":33.9,"year":"2022"},"South Africa":{"value":54.1,"year":"2022"},"Egypt":{"value":28.5,"year":"2021"},"Kenya":{"value":38.5,"year":"2022"},"Ghana":{"value":43.5,"year":"2016"},"Morocco":{"value":39.5,"year":"2013"},"Angola":{"value":51.3,"year":"2018"},"Ethiopia":{"value":31.1,"year":"2021"},"Cote d'Ivoire":{"value":35.3,"year":"2021"},"Rwanda":{"value":39.4,"year":"2023"}};
+
+    let assetPrices = [
+      {
+            "asset": "Australian Dollar",
+            "symbol": "AUDUSD=X",
+            "date": "2026-06-25",
+            "open": 0.690321683883667,
+            "close": 0.6928086280822754,
+            "convention": "USD per 1 AUD"
+      },
+      {
+            "asset": "Canadian Dollar",
+            "symbol": "CAD=X",
+            "date": "2026-06-25",
+            "open": 0.7027308093543546,
+            "close": 0.7052584099626924,
+            "convention": "USD per 1 CAD"
+      },
+      {
+            "asset": "Swiss Franc",
+            "symbol": "CHF=X",
+            "date": "2026-06-25",
+            "open": 1.231967081781676,
+            "close": 1.2359412115928128,
+            "convention": "USD per 1 CHF"
+      },
+      {
+            "asset": "Euro",
+            "symbol": "EURUSD=X",
+            "date": "2026-06-25",
+            "open": 1.1361054182052612,
+            "close": 1.1388224363327026,
+            "convention": "USD per 1 EUR"
+      },
+      {
+            "asset": "British Pound",
+            "symbol": "GBPUSD=X",
+            "date": "2026-06-25",
+            "open": 1.3167771100997925,
+            "close": 1.3218421936035156,
+            "convention": "USD per 1 GBP"
+      },
+      {
+            "asset": "Japanese Yen",
+            "symbol": "JPY=X",
+            "date": "2026-06-25",
+            "open": 0.0061823802163833074,
+            "close": 0.006185516023767271,
+            "convention": "USD per 1 JPY"
+      },
+      {
+            "asset": "New Zealand Dollar",
+            "symbol": "NZDUSD=X",
+            "date": "2026-06-25",
+            "open": 0.5646846294403076,
+            "close": 0.5662193298339844,
+            "convention": "USD per 1 NZD"
+      },
+      {
+            "asset": "US Dollar Index",
+            "symbol": "DX-Y.NYB",
+            "date": "2026-06-25",
+            "open": 101.59700012207031,
+            "close": 101.33499908447266,
+            "convention": "Index points"
+      },
+      {
+            "asset": "Gold",
+            "symbol": "GC=F",
+            "date": "2026-06-25",
+            "open": 4019,
+            "close": 4056.800048828125,
+            "convention": "USD futures price"
+      },
+      {
+            "asset": "Silver",
+            "symbol": "SI=F",
+            "date": "2026-06-25",
+            "open": 57.595001220703125,
+            "close": 58.7599983215332,
+            "convention": "USD futures price"
+      },
+      {
+            "asset": "WTI Crude",
+            "symbol": "CL=F",
+            "date": "2026-06-25",
+            "open": 69.94999694824219,
+            "close": 71.55000305175781,
+            "convention": "USD futures price"
+      },
+      {
+            "asset": "Brent Crude",
+            "symbol": "BZ=F",
+            "date": "2026-06-25",
+            "open": 73.0999984741211,
+            "close": 74.98999786376953,
+            "convention": "USD futures price"
+      },
+      {
+            "asset": "Natural Gas",
+            "symbol": "NG=F",
+            "date": "2026-06-25",
+            "open": 3.263000011444092,
+            "close": 3.2990000247955322,
+            "convention": "USD futures price"
+      },
+      {
+            "asset": "Copper",
+            "symbol": "HG=F",
+            "date": "2026-06-25",
+            "open": 5.985499858856201,
+            "close": 6.151500225067139,
+            "convention": "USD futures price"
+      },
+      {
+            "asset": "Corn",
+            "symbol": "ZC=F",
+            "date": "2026-06-25",
+            "open": 415,
+            "close": 420.25,
+            "convention": "USD futures price"
+      },
+      {
+            "asset": "Wheat",
+            "symbol": "ZW=F",
+            "date": "2026-06-25",
+            "open": 595.25,
+            "close": 596.5,
+            "convention": "USD futures price"
+      },
+      {
+            "asset": "Soybeans",
+            "symbol": "ZS=F",
+            "date": "2026-06-25",
+            "open": 1133.5,
+            "close": 1152,
+            "convention": "USD futures price"
+      },
+      {
+            "asset": "Coffee",
+            "symbol": "KC=F",
+            "date": "2026-06-25",
+            "open": 265.3999938964844,
+            "close": 275.8500061035156,
+            "convention": "USD futures price"
+      },
+      {
+            "asset": "Cocoa",
+            "symbol": "CC=F",
+            "date": "2026-06-25",
+            "open": 5120,
+            "close": 5274,
+            "convention": "USD futures price"
+      }
+];
+
+    const calendarHighlights = [
+      { currency: "AUD", indicator: "Business Confidence", compare: "Previous -> Last", previous: 4, latest: -29, change: -825, unit: "%" },
+      { currency: "NZD", indicator: "Business Confidence Forecast", compare: "Last -> Forecast", previous: -10.6, latest: 32, change: -401.8868, unit: "%" },
+      { currency: "GBP", indicator: "Business Confidence", compare: "Previous -> Last", previous: -19, latest: -65, change: -242.1053, unit: "%" },
+      { currency: "EUR", indicator: "Business Confidence Forecast", compare: "Last -> Forecast", previous: -0.28, latest: -0.7, change: -150, unit: "%" },
+      { currency: "EUR", indicator: "Consumer Confidence", compare: "Previous -> Last", previous: -16.4, latest: -20.6, change: -25.6098, unit: "%" },
+      { currency: "JPY", indicator: "Business Confidence Forecast", compare: "Last -> Forecast", previous: 17, latest: 13, change: -23.5294, unit: "%" },
+      { currency: "GBP", indicator: "Consumer Confidence", compare: "Previous -> Last", previous: -21, latest: -25, change: -19.0476, unit: "%" },
+      { currency: "CAD", indicator: "Business Confidence", compare: "Previous -> Last", previous: 49.7, latest: 57.7, change: 16.0966, unit: "%" },
+      { currency: "AUD", indicator: "Consumer Confidence", compare: "Previous -> Last", previous: 91.6, latest: 80.1, change: -12.5546, unit: "%" },
+      { currency: "NZD", indicator: "Services PMI Forecast", compare: "Last -> Forecast", previous: 46, latest: 51, change: 10.8696, unit: "%" },
+      { currency: "CHF", indicator: "Manufacturing PMI Forecast", compare: "Last -> Forecast", previous: 54.5, latest: 48.8, change: -10.4587, unit: "%" },
+      { currency: "CHF", indicator: "Consumer Confidence Forecast", compare: "Last -> Forecast", previous: -40, latest: -44, change: -10, unit: "%" },
+      { currency: "AUD", indicator: "Services PMI", compare: "Previous -> Last", previous: 46.3, latest: 50.7, change: 9.5032, unit: "%" },
+      { currency: "JPY", indicator: "Manufacturing PMI Forecast", compare: "Last -> Forecast", previous: 55.1, latest: 50.8, change: -7.804, unit: "%" },
+      { currency: "CAD", indicator: "Consumer Confidence", compare: "Previous -> Last", previous: 49.2, latest: 45.6, change: -7.3171, unit: "%" },
+      { currency: "CAD", indicator: "Manufacturing PMI", compare: "Previous -> Last", previous: 50, latest: 53.3, change: 6.6, unit: "%" }
+    ];
+
+    const body = document.getElementById("market-body");
+    const assetBody = document.getElementById("asset-body");
+    const calendarBody = document.getElementById("calendar-body");
+    const macroMatrixBody = document.getElementById("macro-matrix-body");
+    const search = document.getElementById("search");
+    const region = document.getElementById("region");
+    const temperature = document.getElementById("temperature");
+    const excelLink = document.getElementById("excel-link");
+    const refreshNote = document.getElementById("refresh-note");
+
+    function realRate(row) {
+      if (row.rate === null) return null;
+      return +(row.rate - row.inflation).toFixed(2);
+    }
+
+    function badgeClass(temp) {
+      return temp.toLowerCase();
+    }
+
+    function pressureClass(value) {
+      if (value >= 75) return "hot";
+      if (value >= 55) return "warm";
+      return "cool";
+    }
+
+    function formatPct(value) {
+      return value === null ? "n/a" : `${value.toFixed(2).replace(".00", "")}%`;
+    }
+
+    function formatMaybe(value, decimals = 1) {
+      if (value === null || value === undefined || Number.isNaN(value)) return "n/a";
+      return Number(value).toLocaleString("en-GB", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      });
+    }
+
+    function formatNumber(value, decimals = 2) {
+      if (value === null || Number.isNaN(value)) return "n/a";
+      return Number(value).toLocaleString("en-GB", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      });
+    }
+
+    function formatDashboardDate(isoDate) {
+      if (!isoDate) return "latest available";
+      return new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        timeZone: "UTC"
+      }).format(new Date(`${isoDate}T00:00:00Z`));
+    }
+
+    function signalClass(value) {
+      if (Math.abs(value) < 0.05) return "flat";
+      return value > 0 ? "up" : "down";
+    }
+
+    function signalLabel(value) {
+      if (Math.abs(value) < 0.05) return "Flat";
+      return value > 0 ? "Higher" : "Lower";
+    }
+
+    function renderAssets() {
+      assetBody.innerHTML = assetPrices.map(row => {
+        const move = row.close - row.open;
+        const pctMove = row.open ? (move / row.open) * 100 : 0;
+        const decimals = row.open > 100 ? 2 : row.open > 10 ? 3 : 5;
+        return `
+          <tr>
+            <td><strong>${row.asset}</strong></td>
+            <td>${row.symbol}<small>${row.convention || "USD price"}</small></td>
+            <td>${row.date}</td>
+            <td>${formatNumber(row.open, decimals)}</td>
+            <td>${formatNumber(row.close, decimals)}</td>
+            <td><span class="badge ${signalClass(move)}">${formatNumber(pctMove, 2)}%</span></td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    async function loadHostedDailyData() {
+      try {
+        const response = await fetch(`data/latest-export.json?ts=${Date.now()}`, { cache: "no-store" });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!Array.isArray(data.assets)) return;
+        assetPrices = data.assets.map(row => ({
+          asset: row.asset,
+          symbol: row.symbol,
+          date: row.date,
+          open: row.open,
+          close: row.close,
+          convention: row.convention
+        }));
+        if (data.href) excelLink.href = data.href.replace(/^\//, "");
+        const refreshLine = document.querySelector(".meta");
+        if (refreshLine) {
+          refreshLine.innerHTML = refreshLine.innerHTML.replace(
+            /Daily data refresh: .*?<br>/,
+            `Daily data refresh: ${formatDashboardDate(data.date)}<br>`
+          );
+        }
+        if (refreshNote) {
+          refreshNote.textContent = `Hosted data loaded from latest export generated ${data.generatedAt ? new Date(data.generatedAt).toLocaleString("en-GB") : "after the last daily run"}. Refresh after 17:05 London time on weekdays.`;
+        }
+        renderAssets();
+        render();
+      } catch (error) {
+        if (refreshNote) {
+          refreshNote.textContent = "Using embedded fallback data. Refresh after the hosted daily export has run.";
+        }
+      }
+    }
+
+    function renderCalendar() {
+      calendarBody.innerHTML = calendarHighlights.map(row => `
+        <tr>
+          <td><strong>${row.currency}</strong></td>
+          <td>${row.indicator}</td>
+          <td>${row.compare}</td>
+          <td>${formatNumber(row.previous, 2)} -> ${formatNumber(row.latest, 2)}</td>
+          <td>${formatNumber(row.change, 2)}${row.unit}</td>
+          <td><span class="badge ${signalClass(row.change)}">${signalLabel(row.change)}</span></td>
+        </tr>
+      `).join("");
+    }
+
+    function renderMacroMatrix() {
+      const fields = [
+        ["cpi", "pp"],
+        ["gdp", "pp"],
+        ["man_pmi", "%"],
+        ["serv_pmi", "%"],
+        ["unemp", "pp"],
+        ["bus_conf", "%"]
+      ];
+      macroMatrixBody.innerHTML = templateIndicators.map(row => `
+        <tr>
+          <td><strong>${row.currency}</strong></td>
+          <td>${row.market}</td>
+          ${fields.map(([key, unit]) => macroCell(row[key], unit)).join("")}
+        </tr>
+      `).join("");
+    }
+
+    function macroCell(metric, unit) {
+      const signal = signalClass(metric.change || 0);
+      return `
+        <td>
+          <strong>${formatMaybe(metric.current, 1)}</strong>
+          <small>Prev ${formatMaybe(metric.previous, 1)} | Fcst ${formatMaybe(metric.forecast, 1)}</small>
+          <small><span class="badge ${signal}">${formatMaybe(metric.change, 1)} ${unit}</span></small>
+        </td>
+      `;
+    }
+
+    function render() {
+      const query = search.value.trim().toLowerCase();
+      const filtered = markets.filter(row => {
+        const matchSearch = row.market.toLowerCase().includes(query);
+        const matchRegion = region.value === "All" || row.region === region.value;
+        const matchTemp = temperature.value === "All" || row.temp === temperature.value;
+        return matchSearch && matchRegion && matchTemp;
+      });
+
+      body.innerHTML = filtered.map(row => {
+        const rr = realRate(row);
+        return `
+          <tr>
+            <td><strong>${row.market}</strong></td>
+            <td>${row.region}</td>
+            <td>${formatPct(row.inflation)}<small>annual CPI baseline</small></td>
+            <td>${formatPct(row.rate)}<small>${row.rate === null ? "not rate-target based" : "central bank rate"}</small></td>
+            <td>${formatPct(rr)}<small>policy minus CPI</small></td>
+            <td>${giniData[row.market] ? formatMaybe(giniData[row.market].value, 1) : "n/a"}<small>${giniData[row.market] ? giniData[row.market].year : "World Bank unavailable"}</small></td>
+            <td><span class="badge ${badgeClass(row.temp)}">${row.temp}</span></td>
+            <td>${row.bias}</td>
+            <td>
+              <div class="signal">
+                <span>${row.pressure}/100</span>
+                <div class="bar ${pressureClass(row.pressure)}"><i style="width:${row.pressure}%"></i></div>
+              </div>
+            </td>
+            <td>${row.watch}</td>
+          </tr>
+        `;
+      }).join("");
+
+      document.getElementById("market-count").textContent = markets.length;
+      const withRates = markets.filter(row => row.rate !== null);
+      const topRate = withRates.reduce((a, b) => a.rate > b.rate ? a : b);
+      const topInflation = markets.reduce((a, b) => a.inflation > b.inflation ? a : b);
+      const lowTemplateInflation = templateIndicators.reduce((a, b) => a.cpi.current < b.cpi.current ? a : b);
+      const realRates = withRates.map(realRate);
+      const avgReal = realRates.reduce((sum, value) => sum + value, 0) / realRates.length;
+      document.getElementById("top-rate").textContent = formatPct(topRate.rate);
+      document.getElementById("top-rate-name").textContent = topRate.market;
+      document.getElementById("top-inflation").textContent = formatPct(topInflation.inflation);
+      document.getElementById("top-inflation-name").textContent = topInflation.market;
+      document.getElementById("low-inflation").textContent = formatPct(lowTemplateInflation.cpi.current);
+      document.getElementById("low-inflation-name").textContent = `${lowTemplateInflation.market} current CPI`;
+      document.getElementById("hawkish-count").textContent = markets.filter(row => row.temp === "Hot" || row.bias.toLowerCase().includes("hike")).length;
+      document.getElementById("avg-real").textContent = formatPct(avgReal);
+      document.getElementById("commodity-count").textContent = assetPrices.filter(row => row.convention === "USD futures price").length;
+    }
+
+    search.addEventListener("input", render);
+    region.addEventListener("change", render);
+    temperature.addEventListener("change", render);
+    renderAssets();
+    renderCalendar();
+    renderMacroMatrix();
+    render();
+    loadHostedDailyData();
+  </script>
+</body>
+</html>

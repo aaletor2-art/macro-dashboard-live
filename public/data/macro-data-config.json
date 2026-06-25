@@ -1,0 +1,142 @@
+{
+  "dashboard_name": "Automated Macroeconomic Dashboard",
+  "version": "0.2",
+  "structure": "single_combined_document",
+  "refresh_cadence": {
+    "market_data": "daily",
+    "central_bank_rates": "daily",
+    "inflation_and_macro_releases": "daily release-calendar check, monthly or quarterly data pull",
+    "risk_scores": "daily"
+  },
+  "markets": [
+    { "name": "United Kingdom", "iso3": "GBR", "region": "UK & G7" },
+    { "name": "United States", "iso3": "USA", "region": "UK & G7" },
+    { "name": "Euro Area", "iso3": "EMU", "region": "UK & G7" },
+    { "name": "Japan", "iso3": "JPN", "region": "Asia" },
+    { "name": "China", "iso3": "CHN", "region": "Asia" },
+    { "name": "India", "iso3": "IND", "region": "Asia" },
+    { "name": "South Korea", "iso3": "KOR", "region": "Asia" },
+    { "name": "Taiwan", "iso3": "TWN", "region": "Asia" },
+    { "name": "Singapore", "iso3": "SGP", "region": "Asia" },
+    { "name": "Hong Kong", "iso3": "HKG", "region": "Asia" },
+    { "name": "Australia", "iso3": "AUS", "region": "UK & G7" },
+    { "name": "Canada", "iso3": "CAN", "region": "UK & G7" },
+    { "name": "Brazil", "iso3": "BRA", "region": "LatAm" },
+    { "name": "Mexico", "iso3": "MEX", "region": "LatAm" },
+    { "name": "Nigeria", "iso3": "NGA", "region": "Africa" },
+    { "name": "South Africa", "iso3": "ZAF", "region": "Africa" },
+    { "name": "Egypt", "iso3": "EGY", "region": "Africa" },
+    { "name": "Kenya", "iso3": "KEN", "region": "Africa" },
+    { "name": "Ghana", "iso3": "GHA", "region": "Africa" },
+    { "name": "Morocco", "iso3": "MAR", "region": "Africa" },
+    { "name": "Angola", "iso3": "AGO", "region": "Africa" },
+    { "name": "Ethiopia", "iso3": "ETH", "region": "Africa" },
+    { "name": "Cote d'Ivoire", "iso3": "CIV", "region": "Africa" },
+    { "name": "Rwanda", "iso3": "RWA", "region": "Africa" }
+  ],
+  "priority_fields": [
+    "latest_inflation_rate",
+    "inflation_period",
+    "policy_interest_rate",
+    "policy_rate_effective_date",
+    "real_policy_rate",
+    "temperature",
+    "central_bank_bias",
+    "pressure_score",
+    "watch_item",
+    "daily_asset_open",
+    "daily_asset_close",
+    "daily_asset_move",
+    "calendar_previous",
+    "calendar_last",
+    "calendar_forecast",
+    "calendar_change",
+    "calendar_signal",
+    "gini_coefficient",
+    "commodity_open",
+    "commodity_close",
+    "commodity_move"
+  ],
+  "asset_price_feed": {
+    "cadence": "daily",
+    "fields": ["asset", "symbol", "date", "open", "close", "absolute_move", "percent_move", "source"],
+    "initial_assets_from_template": [
+      { "asset": "Australian Dollar", "symbol": "AUDUSD=X" },
+      { "asset": "Canadian Dollar", "symbol": "CAD=X" },
+      { "asset": "Swiss Franc", "symbol": "CHF=X" },
+      { "asset": "Euro", "symbol": "EURUSD=X" },
+      { "asset": "British Pound", "symbol": "GBPUSD=X" },
+      { "asset": "Japanese Yen", "symbol": "JPY=X" },
+      { "asset": "New Zealand Dollar", "symbol": "NZDUSD=X" },
+      { "asset": "US Dollar Index", "symbol": "DX-Y.NYB" }
+    ]
+  },
+  "economic_calendar_feed": {
+    "source_template": "Macro Database 2.xlsx",
+    "fields": ["currency", "indicator", "previous", "last", "forecast", "change", "signal"],
+    "initial_indicators_from_template": [
+      "CPI YoY",
+      "GDP YoY",
+      "Manufacturing PMI",
+      "Services PMI",
+      "Unemployment Rate",
+      "Consumer Confidence",
+      "Business Confidence"
+    ]
+  },
+  "commodity_feed": {
+    "cadence": "daily",
+    "currency": "USD",
+    "initial_assets": ["Gold", "Silver", "WTI Crude", "Brent Crude", "Natural Gas", "Copper", "Corn", "Wheat", "Soybeans", "Coffee", "Cocoa"]
+  },
+  "inequality_feed": {
+    "indicator": "Gini coefficient",
+    "preferred_source": "World Bank SI.POV.GINI",
+    "cadence": "annual or latest available"
+  },
+  "indicator_groups": [
+    {
+      "name": "Inflation",
+      "indicators": ["Headline CPI", "Core CPI", "Food inflation", "Producer prices", "Inflation expectations"]
+    },
+    {
+      "name": "Policy and Rates",
+      "indicators": ["Central bank policy rate", "Real policy rate", "2Y yield", "10Y yield", "Yield curve slope", "Central bank guidance"]
+    },
+    {
+      "name": "Growth",
+      "indicators": ["Real GDP growth", "GDP nowcast", "PMI or business conditions", "Industrial production", "Retail sales"]
+    },
+    {
+      "name": "External",
+      "indicators": ["Current account", "FX reserves", "Exchange rate", "Terms of trade", "External debt"]
+    },
+    {
+      "name": "Fiscal and Credit",
+      "indicators": ["Fiscal balance", "Debt to GDP", "Credit growth", "Money supply", "Banking stress"]
+    },
+    {
+      "name": "Markets",
+      "indicators": ["Equity index", "Sovereign spread", "FX volatility", "Commodity exposure", "CDS where available"]
+    }
+  ],
+  "temperature_rules": {
+    "hot": "Inflation is high, policy is very restrictive, real policy rates are sharply negative, or credibility and currency pressure dominate.",
+    "warm": "Inflation or policy pressure remains elevated, but the next decision is balanced between hold, hike risk, and slow easing.",
+    "neutral": "Policy stance is broadly balanced against inflation and growth signals.",
+    "cool": "Inflation is subdued or demand is weak enough to make easing/support the dominant risk.",
+    "special": "The country does not fit a simple short-rate framework, such as Singapore's exchange-rate-band system."
+  },
+  "preferred_sources": [
+    { "source": "ONS", "use": "UK national accounts, CPI, labour market, trade", "url": "https://developer.ons.gov.uk/" },
+    { "source": "Bank of England IADB", "use": "UK rates, exchange rates, monetary and financial statistics", "url": "https://www.bankofengland.co.uk/boeapps/database/help.asp" },
+    { "source": "World Bank API", "use": "Cross-country annual macro and development indicators", "url": "https://api.worldbank.org/" },
+    { "source": "IMF Data / SDMX", "use": "IFS, WEO, BOP, government finance, reserves", "url": "https://data.imf.org/" },
+    { "source": "OECD Data Explorer", "use": "OECD country comparisons where available", "url": "https://data-explorer.oecd.org/" },
+    { "source": "National central banks and statistics offices", "use": "Local release validation across Asia, Africa, and LatAm", "url": "varies" },
+    { "source": "FXStreet", "use": "Economic calendar, market-moving release context, FX-focused event notes", "url": "https://www.fxstreet.com/economic-calendar" },
+    { "source": "Reuters", "use": "Newswire validation, market context, policy commentary, commodity/FX news", "url": "https://www.reuters.com/markets/" },
+    { "source": "Trading Economics", "use": "Economic calendar, forecasts, indicators, country pages, API where licensed", "url": "https://tradingeconomics.com/calendar" },
+    { "source": "Market data vendor", "use": "Yields, FX, equity indices, commodities, spreads", "url": "Bloomberg, LSEG, FactSet, Yahoo Finance, Stooq, or licensed feed" }
+  ]
+}

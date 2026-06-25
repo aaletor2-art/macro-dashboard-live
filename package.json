@@ -1,0 +1,13 @@
+{
+  "name": "macro-dashboard-live",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo \"Static dashboard ready\"",
+    "export:daily": "node scripts/daily-export.mjs"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0"
+  }
+}

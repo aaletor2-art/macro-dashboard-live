@@ -1,0 +1,248 @@
+{
+  "date": "2026-06-25",
+  "filename": "macro_daily_export_2026-06-25.xlsx",
+  "href": "/daily_exports/macro_daily_export_2026-06-25.xlsx",
+  "generatedAt": "2026-06-25T16:26:51.170Z",
+  "assets": [
+    {
+      "date": "2026-06-25",
+      "asset": "Australian Dollar",
+      "symbol": "AUDUSD=X",
+      "convention": "USD per 1 AUD",
+      "open": 0.690321683883667,
+      "close": 0.6928086280822754,
+      "move": 0.0024869441986083984,
+      "pctMove": 0.003602587397540713
+    },
+    {
+      "date": "2026-06-25",
+      "asset": "Canadian Dollar",
+      "symbol": "CAD=X",
+      "convention": "USD per 1 CAD",
+      "open": 0.7027308093543546,
+      "close": 0.7052584099626924,
+      "move": 0.0025276006083377878,
+      "pctMove": 0.0035968262308865295
+    },
+    {
+      "date": "2026-06-25",
+      "asset": "Swiss Franc",
+      "symbol": "CHF=X",
+      "convention": "USD per 1 CHF",
+      "open": 1.231967081781676,
+      "close": 1.2359412115928128,
+      "move": 0.003974129811136873,
+      "pctMove": 0.0032258409091494578
+    },
+    {
+      "date": "2026-06-25",
+      "asset": "Euro",
+      "symbol": "EURUSD=X",
+      "convention": "USD per 1 EUR",
+      "open": 1.1361054182052612,
+      "close": 1.1388224363327026,
+      "move": 0.0027170181274414062,
+      "pctMove": 0.002391519381831353
+    },
+    {
+      "date": "2026-06-25",
+      "asset": "British Pound",
+      "symbol": "GBPUSD=X",
+      "convention": "USD per 1 GBP",
+      "open": 1.3167771100997925,
+      "close": 1.3218421936035156,
+      "move": 0.0050650835037231445,
+      "pctMove": 0.0038465762085879707
+    },
+    {
+      "date": "2026-06-25",
+      "asset": "Japanese Yen",
+      "symbol": "JPY=X",
+      "convention": "USD per 1 JPY",
+      "open": 0.0061823802163833074,
+      "close": 0.006185516023767271,
+      "move": 0.000003135807383963969,
+      "pctMove": 0.0005072168443560621
+    },
+    {
+      "date": "2026-06-25",
+      "asset": "New Zealand Dollar",
+      "symbol": "NZDUSD=X",
+      "convention": "USD per 1 NZD",
+      "open": 0.5646846294403076,
+      "close": 0.5662193298339844,
+      "move": 0.0015347003936767578,
+      "pctMove": 0.002717800899234568
+    },
+    {
+      "date": "2026-06-25",
+      "asset": "US Dollar Index",
+      "symbol": "DX-Y.NYB",
+      "convention": "Index points",
+      "open": 101.59700012207031,
+      "close": 101.33499908447266,
+      "move": -0.26200103759765625,
+      "pctMove": -0.00257882651340946
+    },
+    {
+      "date": "2026-06-25",
+      "asset": "Gold",
+      "symbol": "GC=F",
+      "convention": "USD futures price",
+      "open": 4019,
+      "close": 4056.800048828125,
+      "move": 37.800048828125,
+      "pctMove": 0.009405336856960655
+    },
+    {
+      "date": "2026-06-25",
+      "asset": "Silver",
+      "symbol": "SI=F",
+      "convention": "USD futures price",
+      "open": 57.595001220703125,
+      "close": 58.7599983215332,
+      "move": 1.1649971008300781,
+      "pctMove": 0.020227399533612855
+    },
+    {
+      "date": "2026-06-25",
+      "asset": "WTI Crude",
+      "symbol": "CL=F",
+      "convention": "USD futures price",
+      "open": 69.94999694824219,
+      "close": 71.55000305175781,
+      "move": 1.600006103515625,
+      "pctMove": 0.022873569311225417
+    },
+    {
+      "date": "2026-06-25",
+      "asset": "Brent Crude",
+      "symbol": "BZ=F",
+      "convention": "USD futures price",
+      "open": 73.0999984741211,
+      "close": 74.98999786376953,
+      "move": 1.8899993896484375,
+      "pctMove": 0.025854985350205473
+    },
+    {
+      "date": "2026-06-25",
+      "asset": "Natural Gas",
+      "symbol": "NG=F",
+      "convention": "USD futures price",
+      "open": 3.263000011444092,
+      "close": 3.2990000247955322,
+      "move": 0.03600001335144043,
+      "pctMove": 0.011032795962359732
+    },
+    {
+      "date": "2026-06-25",
+      "asset": "Copper",
+      "symbol": "HG=F",
+      "convention": "USD futures price",
+      "open": 5.985499858856201,
+      "close": 6.151500225067139,
+      "move": 0.1660003662109375,
+      "pctMove": 0.027733751587233346
+    },
+    {
+      "date": "2026-06-25",
+      "asset": "Corn",
+      "symbol": "ZC=F",
+      "convention": "USD futures price",
+      "open": 415,
+      "close": 420.25,
+      "move": 5.25,
+      "pctMove": 0.012650602409638445
+    },
+    {
+      "date": "2026-06-25",
+      "asset": "Wheat",
+      "symbol": "ZW=F",
+      "convention": "USD futures price",
+      "open": 595.25,
+      "close": 596.5,
+      "move": 1.25,
+      "pctMove": 0.002099958000840063
+    },
+    {
+      "date": "2026-06-25",
+      "asset": "Soybeans",
+      "symbol": "ZS=F",
+      "convention": "USD futures price",
+      "open": 1133.5,
+      "close": 1152,
+      "move": 18.5,
+      "pctMove": 0.016321129245699062
+    },
+    {
+      "date": "2026-06-25",
+      "asset": "Coffee",
+      "symbol": "KC=F",
+      "convention": "USD futures price",
+      "open": 265.3999938964844,
+      "close": 275.8500061035156,
+      "move": 10.45001220703125,
+      "pctMove": 0.039374575913167176
+    },
+    {
+      "date": "2026-06-25",
+      "asset": "Cocoa",
+      "symbol": "CC=F",
+      "convention": "USD futures price",
+      "open": 5120,
+      "close": 5274,
+      "move": 154,
+      "pctMove": 0.030078124999999956
+    }
+  ],
+  "calendarLines": [
+    {
+      "currency": "AUD",
+      "event": "Business Confidence",
+      "values": "Previous 4.0; Last -29.0; Forecast -34.0",
+      "line": "Sharply weaker confidence in the template calendar."
+    },
+    {
+      "currency": "GBP",
+      "event": "Business Confidence",
+      "values": "Previous -19.0; Last -65.0; Forecast -20.0",
+      "line": "Large downside surprise versus previous reading."
+    },
+    {
+      "currency": "EUR",
+      "event": "Consumer Confidence",
+      "values": "Previous -16.4; Last -20.6; Forecast -17.0",
+      "line": "Consumer confidence weaker than prior level."
+    },
+    {
+      "currency": "CAD",
+      "event": "Business Confidence",
+      "values": "Previous 49.7; Last 57.7; Forecast 50.0",
+      "line": "Improved versus previous reading."
+    },
+    {
+      "currency": "NZD",
+      "event": "Services PMI Forecast",
+      "values": "Last 46.0; Forecast 51.0",
+      "line": "Forecast points to a move back above 50."
+    },
+    {
+      "currency": "CHF",
+      "event": "Manufacturing PMI Forecast",
+      "values": "Last 54.5; Forecast 48.8",
+      "line": "Forecast implies contraction risk."
+    },
+    {
+      "currency": "AUD",
+      "event": "Services PMI",
+      "values": "Previous 46.3; Last 50.7; Forecast 49.0",
+      "line": "Latest reading moved back above 50."
+    },
+    {
+      "currency": "CAD",
+      "event": "Manufacturing PMI",
+      "values": "Previous 50.0; Last 53.3; Forecast 50.1",
+      "line": "Manufacturing improved versus previous reading."
+    }
+  ]
+}

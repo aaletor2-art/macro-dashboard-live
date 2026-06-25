@@ -1,0 +1,35 @@
+name: Daily macro Excel export
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 17:05 UK time during British Summer Time. GitHub schedules use UTC.
+    # In winter, change this to 17:05 UTC or add a timezone-aware wrapper.
+    - cron: "5 16 * * 1-5"
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate daily Excel export
+        run: npm run export:daily
+
+      - name: Commit export
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update daily macro export"
+          file_pattern: "public/daily_exports/*.xlsx public/data/latest-export.json"
