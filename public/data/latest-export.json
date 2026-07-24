@@ -1,198 +1,198 @@
 {
-  "date": "2026-07-23",
-  "filename": "macro_daily_export_2026-07-23.xlsx",
-  "href": "/daily_exports/macro_daily_export_2026-07-23.xlsx",
-  "generatedAt": "2026-07-23T20:18:54.598Z",
+  "date": "2026-07-24",
+  "filename": "macro_daily_export_2026-07-24.xlsx",
+  "href": "/daily_exports/macro_daily_export_2026-07-24.xlsx",
+  "generatedAt": "2026-07-24T20:48:03.859Z",
   "assets": [
     {
-      "date": "2026-07-23",
+      "date": "2026-07-24",
       "asset": "Australian Dollar",
       "symbol": "AUDUSD=X",
       "convention": "USD per 1 AUD",
-      "open": 0.6991540193557739,
-      "close": 0.6969612240791321,
-      "move": -0.0021927952766418457,
-      "pctMove": -0.003136355103360966
+      "open": 0.6973500847816467,
+      "close": 0.6983727812767029,
+      "move": 0.0010226964950561523,
+      "pctMove": 0.0014665467422669831
     },
     {
-      "date": "2026-07-23",
+      "date": "2026-07-24",
       "asset": "Canadian Dollar",
       "symbol": "CAD=X",
       "convention": "USD per 1 CAD",
-      "open": 0.7101768295103987,
-      "close": 0.7098894961233094,
-      "move": -0.0002873333870893058,
-      "pctMove": -0.00040459414493621004
+      "open": 0.7101818799068568,
+      "close": 0.7093909261540192,
+      "move": -0.0007909537528375532,
+      "pctMove": -0.0011137340661822037
     },
     {
-      "date": "2026-07-23",
+      "date": "2026-07-24",
       "asset": "Swiss Franc",
       "symbol": "CHF=X",
       "convention": "USD per 1 CHF",
-      "open": 1.228003416728943,
-      "close": 1.22430492382144,
-      "move": -0.003698492907503015,
-      "pctMove": -0.003011793662068718
+      "open": 1.2251898775220242,
+      "close": 1.2218665338655574,
+      "move": -0.003323343656466804,
+      "pctMove": -0.0027125131519927237
     },
     {
-      "date": "2026-07-23",
+      "date": "2026-07-24",
       "asset": "Euro",
       "symbol": "EURUSD=X",
       "convention": "USD per 1 EUR",
-      "open": 1.1410315036773682,
-      "close": 1.138044834136963,
-      "move": -0.0029866695404052734,
-      "pctMove": -0.0026175171594997604
+      "open": 1.1379153728485107,
+      "close": 1.1371389627456665,
+      "move": -0.0007764101028442383,
+      "pctMove": -0.0006823091781427149
     },
     {
-      "date": "2026-07-23",
+      "date": "2026-07-24",
       "asset": "British Pound",
       "symbol": "GBPUSD=X",
       "convention": "USD per 1 GBP",
-      "open": 1.337524175643921,
-      "close": 1.331611156463623,
-      "move": -0.0059130191802978516,
-      "pctMove": -0.004420869011546036
+      "open": 1.3318061828613281,
+      "close": 1.3318417072296143,
+      "move": 0.00003552436828613281,
+      "pctMove": 0.000026673827425716112
     },
     {
-      "date": "2026-07-23",
+      "date": "2026-07-24",
       "asset": "Japanese Yen",
       "symbol": "JPY=X",
       "convention": "USD per 1 JPY",
-      "open": 0.006131583925774302,
-      "close": 0.006104186018958781,
-      "move": -0.000027397906815521296,
-      "pctMove": -0.004468324522209244
+      "open": 0.006106422981230688,
+      "close": 0.006103217348052602,
+      "move": -0.000003205633178086399,
+      "pctMove": -0.0005249608793789218
     },
     {
-      "date": "2026-07-23",
+      "date": "2026-07-24",
       "asset": "New Zealand Dollar",
       "symbol": "NZDUSD=X",
       "convention": "USD per 1 NZD",
-      "open": 0.5818012952804565,
-      "close": 0.5774005651473999,
-      "move": -0.004400730133056641,
-      "pctMove": -0.007563974450994104
+      "open": 0.5773005485534668,
+      "close": 0.5788711905479431,
+      "move": 0.0015706419944763184,
+      "pctMove": 0.0027206660350693745
     },
     {
-      "date": "2026-07-23",
+      "date": "2026-07-24",
       "asset": "US Dollar Index",
       "symbol": "DX-Y.NYB",
       "convention": "Index points",
-      "open": 101.12000274658203,
-      "close": 101.4260025024414,
-      "move": 0.305999755859375,
-      "pctMove": 0.0030261050983775295
+      "open": 101.44400024414062,
+      "close": 101.49600219726562,
+      "move": 0.052001953125,
+      "pctMove": 0.0005126173356713171
     },
     {
-      "date": "2026-07-23",
+      "date": "2026-07-24",
       "asset": "Gold",
       "symbol": "GC=F",
       "convention": "USD futures price",
-      "open": 4126,
-      "close": 4051.800048828125,
-      "move": -74.199951171875,
-      "pctMove": -0.017983507312621216
+      "open": 4053.39990234375,
+      "close": 4056.300048828125,
+      "move": 2.900146484375,
+      "pctMove": 0.0007154849149471065
     },
     {
-      "date": "2026-07-23",
+      "date": "2026-07-24",
       "asset": "Silver",
       "symbol": "SI=F",
       "convention": "USD futures price",
-      "open": 60.0099983215332,
-      "close": 57.86000061035156,
-      "move": -2.1499977111816406,
-      "pctMove": -0.03582732496778229
+      "open": 57.91999816894531,
+      "close": 58.51499938964844,
+      "move": 0.595001220703125,
+      "pctMove": 0.010272811455683817
     },
     {
-      "date": "2026-07-23",
+      "date": "2026-07-24",
       "asset": "WTI Crude",
       "symbol": "CL=F",
       "convention": "USD futures price",
-      "open": 87.72000122070312,
-      "close": 91.55000305175781,
-      "move": 3.8300018310546875,
-      "pctMove": 0.043661670973059064
+      "open": 92.55000305175781,
+      "close": 90.4000015258789,
+      "move": -2.1500015258789062,
+      "pctMove": -0.023230701836676748
     },
     {
-      "date": "2026-07-23",
+      "date": "2026-07-24",
       "asset": "Brent Crude",
       "symbol": "BZ=F",
       "convention": "USD futures price",
-      "open": 95.23999786376953,
-      "close": 99.83999633789062,
-      "move": 4.599998474121094,
-      "pctMove": 0.04829901908125711
+      "open": 100.91000366210938,
+      "close": 98.1500015258789,
+      "move": -2.7600021362304688,
+      "pctMove": -0.027351125122065723
     },
     {
-      "date": "2026-07-23",
+      "date": "2026-07-24",
       "asset": "Natural Gas",
       "symbol": "NG=F",
       "convention": "USD futures price",
-      "open": 2.943000078201294,
-      "close": 2.9119999408721924,
-      "move": -0.031000137329101562,
-      "pctMove": -0.010533515632132895
+      "open": 2.9110000133514404,
+      "close": 2.9030001163482666,
+      "move": -0.007999897003173828,
+      "pctMove": -0.002748161101505331
     },
     {
-      "date": "2026-07-23",
+      "date": "2026-07-24",
       "asset": "Copper",
       "symbol": "HG=F",
       "convention": "USD futures price",
-      "open": 6.486499786376953,
-      "close": 6.323500156402588,
-      "move": -0.16299962997436523,
-      "pctMove": -0.025129058096432733
+      "open": 6.335999965667725,
+      "close": 6.336999893188477,
+      "move": 0.0009999275207519531,
+      "pctMove": 0.0001578168444080763
     },
     {
-      "date": "2026-07-23",
+      "date": "2026-07-24",
       "asset": "Corn",
       "symbol": "ZC=F",
       "convention": "USD futures price",
-      "open": 483,
-      "close": 486.75,
-      "move": 3.75,
-      "pctMove": 0.007763975155279601
+      "open": 486.25,
+      "close": 487.25,
+      "move": 1,
+      "pctMove": 0.0020565552699229883
     },
     {
-      "date": "2026-07-23",
+      "date": "2026-07-24",
       "asset": "Wheat",
       "symbol": "ZW=F",
       "convention": "USD futures price",
-      "open": 705.5,
-      "close": 694.5,
-      "move": -11,
-      "pctMove": -0.015591778880226781
+      "open": 694.75,
+      "close": 679,
+      "move": -15.75,
+      "pctMove": -0.02267002518891692
     },
     {
-      "date": "2026-07-23",
+      "date": "2026-07-24",
       "asset": "Soybeans",
       "symbol": "ZS=F",
       "convention": "USD futures price",
-      "open": 1237,
-      "close": 1241,
-      "move": 4,
-      "pctMove": 0.003233629749393785
+      "open": 1242,
+      "close": 1252.5,
+      "move": 10.5,
+      "pctMove": 0.008454106280193274
     },
     {
-      "date": "2026-07-23",
+      "date": "2026-07-24",
       "asset": "Coffee",
       "symbol": "KC=F",
       "convention": "USD futures price",
-      "open": 306.54998779296875,
-      "close": 310.75,
-      "move": 4.20001220703125,
-      "pctMove": 0.013700904825570515
+      "open": 297.70001220703125,
+      "close": 314.20001220703125,
+      "move": 16.5,
+      "pctMove": 0.05542492214788797
     },
     {
-      "date": "2026-07-23",
+      "date": "2026-07-24",
       "asset": "Cocoa",
       "symbol": "CC=F",
       "convention": "USD futures price",
-      "open": 5426,
-      "close": 5367,
-      "move": -59,
-      "pctMove": -0.01087357169185399
+      "open": 5464,
+      "close": 5331,
+      "move": -133,
+      "pctMove": -0.024341142020497752
     }
   ],
   "calendarLines": [
