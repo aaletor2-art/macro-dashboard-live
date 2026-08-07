@@ -333,7 +333,29 @@
 
   <main>
     <div id="overview-page" class="page active" data-page="overview">
-    <section class="metric-grid">
+    <section class="overview-hero">
+      <div class="overview-intro">
+        <span class="eyebrow">TODAY'S MACRO BRIEF</span>
+        <h2>See pressure building before it reaches the market.</h2>
+        <p id="overview-summary">Loading the latest cross-country policy and market signals…</p>
+        <div class="overview-actions">
+          <a class="primary-action" href="#countries">Explore countries</a>
+          <a class="secondary-action" href="#updates">Read latest updates</a>
+        </div>
+      </div>
+      <div class="brief-card">
+        <div class="brief-card-head"><span>Priority watchlist</span><small id="overview-asof">Latest refresh</small></div>
+        <div id="priority-watchlist" class="priority-watchlist"></div>
+      </div>
+    </section>
+
+    <section class="overview-pulse-grid" aria-label="Latest dashboard pulse">
+      <div class="pulse-panel"><div class="section-label"><span>Market pulse</span><a href="#markets">All markets →</a></div><div id="overview-movers"></div></div>
+      <div class="pulse-panel"><div class="section-label"><span>Latest context</span><a href="#updates">All updates →</a></div><div id="overview-news"></div></div>
+      <div class="pulse-panel country-jump-panel"><div class="section-label"><span>Country quick look</span><a href="#countries">Compare all →</a></div><label for="overview-country-select">Select a market</label><select id="overview-country-select"><option value="">Choose country…</option></select><p>Open inflation, policy, real-rate and risk analysis in one profile.</p></div>
+    </section>
+
+    <section class="metric-grid overview-metrics">
       <div class="metric"><span>Markets covered</span><strong id="market-count">0</strong><small>UK, G7, Asia, LatAm, and Africa in one view</small></div>
       <div class="metric"><span>Highest policy rate</span><strong id="top-rate">0%</strong><small id="top-rate-name">Across tracked markets</small></div>
       <div class="metric"><span>Highest inflation</span><strong id="top-inflation">0%</strong><small id="top-inflation-name">Latest annual CPI baseline</small></div>
@@ -343,9 +365,9 @@
       <div class="metric"><span>Commodities tracked</span><strong id="commodity-count">0</strong><small>USD-denominated futures prices</small></div>
     </section>
 
-    <section class="panel">
+    <section class="panel overview-table-panel">
       <div class="panel-head">
-        <h2>Single Market Monitor</h2>
+        <div><h2>Global comparison</h2><div class="mini-kicker">The highest-pressure markets appear first. Open any market for its full profile.</div></div>
         <div class="toolbar">
           <input id="search" type="search" placeholder="Search market">
           <select id="region">
@@ -363,6 +385,7 @@
             <option value="Cool">Cool</option>
             <option value="Special">Special</option>
           </select>
+          <button id="toggle-markets" class="table-toggle" type="button">Show all markets</button>
         </div>
       </div>
       <div class="table-wrap">
@@ -748,8 +771,10 @@
     const search = document.getElementById("search");
     const region = document.getElementById("region");
     const temperature = document.getElementById("temperature");
+    const toggleMarkets = document.getElementById("toggle-markets");
     const excelLink = document.getElementById("excel-link");
     const refreshNote = document.getElementById("refresh-note");
+    let marketRowsExpanded = false;
 
     function realRate(row) {
       if (row.rate === null) return null;
@@ -907,9 +932,11 @@
         const matchRegion = region.value === "All" || row.region === region.value;
         const matchTemp = temperature.value === "All" || row.temp === temperature.value;
         return matchSearch && matchRegion && matchTemp;
-      });
+      }).sort((a, b) => b.pressure - a.pressure);
+      const hasActiveFilter = query || region.value !== "All" || temperature.value !== "All";
+      const visibleRows = marketRowsExpanded || hasActiveFilter ? filtered : filtered.slice(0, 8);
 
-      body.innerHTML = filtered.map(row => {
+      body.innerHTML = visibleRows.map(row => {
         const rr = realRate(row);
         return `
           <tr>
@@ -932,6 +959,9 @@
         `;
       }).join("");
 
+      toggleMarkets.hidden = hasActiveFilter || filtered.length <= 8;
+      toggleMarkets.textContent = marketRowsExpanded ? "Show priority markets" : `Show all ${filtered.length} markets`;
+
       document.getElementById("market-count").textContent = markets.length;
       const withRates = markets.filter(row => row.rate !== null);
       const topRate = withRates.reduce((a, b) => a.rate > b.rate ? a : b);
@@ -953,6 +983,7 @@
     search.addEventListener("input", render);
     region.addEventListener("change", render);
     temperature.addEventListener("change", render);
+    toggleMarkets.addEventListener("click", () => { marketRowsExpanded = !marketRowsExpanded; render(); });
     renderAssets();
     renderCalendar();
     renderMacroMatrix();

@@ -36,6 +36,7 @@
   function renderCountryGrid() {
     const grid = document.getElementById("country-grid");
     const select = document.getElementById("country-select");
+    const overviewSelect = document.getElementById("overview-country-select");
     grid.innerHTML = markets.map(row => `
       <a class="country-card" href="#country=${encodeURIComponent(row.market)}">
         <div class="country-card-top"><span class="flag" aria-hidden="true">${flags[row.market] || "🌍"}</span><span class="badge ${badgeClass(row.temp)}">${row.temp}</span></div>
@@ -44,6 +45,23 @@
       </a>`).join("");
     select.innerHTML = `<option value="">Choose country…</option>${markets.map(row => `<option value="${encodeURIComponent(row.market)}">${flags[row.market] || "🌍"} ${row.market}</option>`).join("")}`;
     select.addEventListener("change", event => { if (event.target.value) location.hash = `country=${event.target.value}`; });
+    overviewSelect.innerHTML = select.innerHTML;
+    overviewSelect.addEventListener("change", event => { if (event.target.value) location.hash = `country=${event.target.value}`; });
+  }
+
+  function renderOverview() {
+    const priorities = [...markets].sort((a,b) => b.pressure - a.pressure).slice(0,3);
+    document.getElementById("priority-watchlist").innerHTML = priorities.map(row => `<a class="priority-item" href="#country=${encodeURIComponent(row.market)}"><span class="flag">${flags[row.market] || "🌍"}</span><span><strong>${row.market}</strong><small>${row.watch}</small></span><span class="priority-score">${row.pressure}/100</span></a>`).join("");
+    const hotCount = markets.filter(row => row.temp === "Hot").length;
+    const leader = priorities[0];
+    document.getElementById("overview-summary").textContent = `${hotCount} markets are in a high-pressure regime. ${leader.market} leads the risk ranking at ${leader.pressure}/100, while the latest tape and publisher updates below show where market attention is moving.`;
+    document.getElementById("overview-asof").textContent = hosted.date ? `As of ${hosted.date}` : "Latest model view";
+
+    const movers = [...(hosted.assets || [])].filter(row => row.open && row.close).map(row => ({...row, pct:(row.close / row.open - 1) * 100})).sort((a,b) => Math.abs(b.pct)-Math.abs(a.pct)).slice(0,3);
+    document.getElementById("overview-movers").innerHTML = movers.length ? movers.map(row => `<a class="pulse-row" href="#markets"><span><strong>${row.asset}</strong><small>${row.date} · ${row.symbol}</small></span><span class="badge ${row.pct > 0 ? "up" : row.pct < 0 ? "down" : "flat"}">${row.pct >= 0 ? "+" : ""}${number(row.pct)}%</span></a>`).join("") : `<div class="empty-state">Loading market moves…</div>`;
+
+    const headlines = (hosted.news || []).slice(0,2);
+    document.getElementById("overview-news").innerHTML = headlines.length ? headlines.map(item => `<a class="headline-row" target="_blank" rel="noopener" href="${item.url}"><span>${item.source}</span><strong>${item.title}</strong></a>`).join("") : `<a class="headline-row" href="#updates"><span>UPDATES</span><strong>Open the latest macro context</strong></a>`;
   }
 
   function releaseRows(country) {
@@ -123,7 +141,7 @@
     } catch {
       document.getElementById("refresh-age").textContent = "Live snapshot temporarily unavailable";
     }
-    renderMarkets(); renderNews(); route();
+    renderMarkets(); renderNews(); renderOverview(); route();
   }
 
   renderCountryGrid();
