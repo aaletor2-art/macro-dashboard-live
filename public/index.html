@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Automated Macroeconomic Dashboard</title>
   <meta name="description" content="Live cross-country macroeconomic intelligence, market prices, country profiles and trusted news links.">
-  <link rel="stylesheet" href="/enhancements.css">
+  <link rel="stylesheet" href="/enhancements.css?v=20260807-4">
   <style>
     :root {
       --bg: #f5f6f3;
@@ -22,6 +22,10 @@
     }
 
     * { box-sizing: border-box; }
+
+    /* Critical route containment: never expose every dashboard section if an enhanced asset is delayed. */
+    .page { display: none; }
+    .page.active { display: block; }
 
     body {
       margin: 0;
@@ -1045,6 +1049,6 @@
     render();
     loadHostedDailyData();
   </script>
-  <script src="/app-enhancements.js"></script>
+  <script src="/app-enhancements.js?v=20260807-4"></script>
 </body>
 </html>
