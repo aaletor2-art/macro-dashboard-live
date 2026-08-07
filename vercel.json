@@ -1,6 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "outputDirectory": "public",
+  "rewrites": [
+    { "source": "/markets", "destination": "/index.html" },
+    { "source": "/calendar", "destination": "/index.html" },
+    { "source": "/companies", "destination": "/index.html" },
+    { "source": "/countries/:path*", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/data/(.*)",
