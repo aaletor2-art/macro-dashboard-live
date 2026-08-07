@@ -7,13 +7,14 @@ This folder is connected to GitHub and deploys automatically on Vercel.
 ## What It Does
 
 - Hosts the web dashboard from `public/index.html`.
-- Provides separate public routes for Countries, individual country profiles, Markets, Economic Calendar, and Companies.
+- Provides separate public routes for Countries, individual country profiles, Markets, Economic Calendar, Companies, and the LAT Trading Plan.
 - Runs a daily GitHub Action at close of business UK time during BST.
 - Creates an Excel workbook in `public/daily_exports/`.
 - Updates `public/data/latest-export.json` with the latest export link and asset rows.
 - Keeps the previous valid quote when an upstream market request times out, and marks it stale in the data file.
 - Adds current Reuters and Trading Economics headline links through Google News RSS, with source attribution and no copied article bodies.
 - Serves five-minute-cached market and company quotes from `/api/live`, with the daily hosted snapshot as a fallback.
+- Calculates 20-period Bollinger Bands and 14-period stochastic signals for the rule-based trading-plan page.
 - Does **not** use Reuters. Reuters can be added later through an API/export route.
 
 ## Deployment
