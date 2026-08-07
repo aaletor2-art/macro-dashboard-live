@@ -6,6 +6,7 @@ const required = [
   "public/app-enhancements.js",
   "api/live.js",
   "api/history.js",
+  "api/companies.js",
   "public/data/latest-export.json"
 ];
 
@@ -24,7 +25,7 @@ if (!Array.isArray(snapshot.assets) || snapshot.assets.length === 0) {
 }
 
 const page = await fs.readFile("public/index.html", "utf8");
-for (const requiredText of ["data-page=\"countries\"", "data-page=\"country\"", "data-page=\"markets\"", "data-page=\"calendar\"", "data-page=\"companies\"", "data-page=\"trading-plan\"", "id=\"plan-chart\"", "id=\"refresh-number\"", "id=\"landing-news-grid\""]) {
+for (const requiredText of ["data-page=\"countries\"", "data-page=\"country\"", "data-page=\"markets\"", "data-page=\"calendar\"", "data-page=\"companies\"", "data-page=\"company\"", "data-page=\"trading-plan\"", "id=\"plan-chart\"", "id=\"refresh-number\"", "id=\"landing-news-grid\""]) {
   if (!page.includes(requiredText)) throw new Error(`Dashboard UI is missing ${requiredText}`);
 }
 
