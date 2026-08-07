@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.12.1",
   "scripts": {
-    "build": "echo \"Static dashboard ready\"",
+    "build": "node scripts/validate-build.mjs",
     "export:daily": "node scripts/daily-export.mjs"
   },
   "dependencies": {

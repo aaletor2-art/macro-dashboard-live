@@ -1,6 +1,8 @@
 # Macro Dashboard Live
 
-This folder is ready to push to GitHub and deploy on Vercel.
+Production dashboard: https://macro-dashboard-live.vercel.app
+
+This folder is connected to GitHub and deploys automatically on Vercel.
 
 ## What It Does
 
@@ -8,19 +10,12 @@ This folder is ready to push to GitHub and deploy on Vercel.
 - Runs a daily GitHub Action at close of business UK time during BST.
 - Creates an Excel workbook in `public/daily_exports/`.
 - Updates `public/data/latest-export.json` with the latest export link and asset rows.
+- Keeps the previous valid quote when an upstream market request times out, and marks it stale in the data file.
 - Does **not** use Reuters. Reuters can be added later through an API/export route.
 
-## Deploy Steps
+## Deployment
 
-1. Create a new GitHub repository.
-2. Upload or push the contents of this folder.
-3. In GitHub, run **Actions -> Daily macro Excel export -> Run workflow** once.
-4. Connect the repository to Vercel.
-5. In Vercel:
-   - Framework preset: **Other**
-   - Build command: leave empty
-   - Output directory: `public`
-6. Open the Vercel URL.
+The `main` branch of `aaletor2-art/macro-dashboard-live` is connected to Vercel. Every successful data refresh commits the new snapshot and triggers a production deployment. `vercel.json` keeps the static output directory and cache behaviour in source control.
 
 ## Close Of Business Schedule
 
