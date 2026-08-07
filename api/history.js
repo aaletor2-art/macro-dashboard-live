@@ -4,7 +4,7 @@ const countries = {
   "euro-area": { name: "Euro Area", iso: "EMU", fred: "CP0000EZ19M086NEST" },
   japan: { name: "Japan", iso: "JPN", fred: "JPNCPIALLMINMEI" }, china: { name: "China", iso: "CHN", fred: "CHNCPIALLMINMEI" },
   india: { name: "India", iso: "IND", fred: "INDCPIALLMINMEI" }, "south-korea": { name: "South Korea", iso: "KOR", fred: "KORCPIALLMINMEI" },
-  taiwan: { name: "Taiwan", iso: "TWN" }, singapore: { name: "Singapore", iso: "SGP" }, "hong-kong": { name: "Hong Kong", iso: "HKG" },
+  taiwan: { name: "Taiwan", iso: "TWN", fred: "TWNPCPIPCPPPT", direct: true }, singapore: { name: "Singapore", iso: "SGP" }, "hong-kong": { name: "Hong Kong", iso: "HKG" },
   australia: { name: "Australia", iso: "AUS", fred: "AUSCPIALLQINMEI" }, canada: { name: "Canada", iso: "CAN", fred: "CANCPIALLMINMEI" },
   brazil: { name: "Brazil", iso: "BRA", fred: "BRACPIALLMINMEI" }, mexico: { name: "Mexico", iso: "MEX", fred: "MEXCPIALLMINMEI" },
   nigeria: { name: "Nigeria", iso: "NGA" }, "south-africa": { name: "South Africa", iso: "ZAF", fred: "ZAFCPIALLMINMEI" },
@@ -33,6 +33,13 @@ async function monthlyInflation(series) {
   }).filter(Boolean).slice(-72);
 }
 
+async function directInflation(series) {
+  const response = await fetch(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=${series}`, { signal: AbortSignal.timeout(9000) });
+  if (!response.ok) throw new Error(`FRED ${response.status}`);
+  const today = new Date().toISOString().slice(0, 10);
+  return csvRows(await response.text()).filter(item => item.date <= today).slice(-25);
+}
+
 async function annualInflation(iso) {
   const response = await fetch(`https://api.worldbank.org/v2/country/${iso}/indicator/FP.CPI.TOTL.ZG?format=json&per_page=70`, { signal: AbortSignal.timeout(9000) });
   if (!response.ok) throw new Error(`World Bank ${response.status}`);
@@ -48,7 +55,7 @@ export default async function handler(request, response) {
   if (!country) return response.status(404).json({ error: "Country not mapped" });
   let observations = [], frequency = "annual", source = "World Bank";
   if (country.fred) {
-    try { observations = await monthlyInflation(country.fred); frequency = country.fred.includes("QIN") ? "quarterly" : "monthly"; source = "FRED / OECD CPI index"; } catch {}
+    try { observations = country.direct ? await directInflation(country.fred) : await monthlyInflation(country.fred); frequency = country.direct ? "annual" : country.fred.includes("QIN") ? "quarterly" : "monthly"; source = country.direct ? "FRED / IMF inflation series" : "FRED / OECD CPI index"; } catch {}
   }
   if (!observations.length) observations = await annualInflation(country.iso);
   return response.status(200).json({ country: country.name, indicator: "Consumer price inflation", unit: "% year on year", frequency, source, sourceUrl: source.startsWith("FRED") ? `https://fred.stlouisfed.org/series/${country.fred}` : `https://data.worldbank.org/indicator/FP.CPI.TOTL.ZG?locations=${country.iso}`, generatedAt: new Date().toISOString(), observations });
