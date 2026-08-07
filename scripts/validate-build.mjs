@@ -17,7 +17,7 @@ if (!Array.isArray(snapshot.assets) || snapshot.assets.length === 0) {
 }
 
 const page = await fs.readFile("public/index.html", "utf8");
-for (const requiredText of ["data-page=\"countries\"", "data-page=\"country\"", "data-page=\"updates\"", "id=\"refresh-number\""]) {
+for (const requiredText of ["data-page=\"countries\"", "data-page=\"country\"", "data-page=\"updates\"", "id=\"refresh-number\"", "id=\"priority-watchlist\"", "id=\"overview-movers\""]) {
   if (!page.includes(requiredText)) throw new Error(`Dashboard UI is missing ${requiredText}`);
 }
 
