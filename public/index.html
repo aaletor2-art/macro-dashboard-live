@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Automated Macroeconomic Dashboard</title>
+  <meta name="description" content="Live cross-country macroeconomic intelligence, market prices, country profiles and trusted news links.">
+  <link rel="stylesheet" href="enhancements.css">
   <style>
     :root {
       --bg: #f5f6f3;
@@ -309,21 +311,28 @@
   <header>
     <div class="topbar">
       <div>
-        <h1>Automated Macroeconomic Dashboard</h1>
-        <p class="subtitle">One combined market document for the UK, Asia, major global markets, Nigeria, and major African markets. Separate regional workflows are removed; filters are available inside the same table.</p>
+        <div class="brand-line"><span class="brand-mark">A</span><h1>ABMOTH Macro Intelligence</h1></div>
+        <p class="subtitle">A live, practical view of inflation, policy, growth and market pressure across the UK, global markets and Africa.</p>
       </div>
       <div class="meta">
-        Daily data refresh: 25 Jun 2026<br>
-        Inflation: latest comparable annual CPI baseline<br>
-        Policy rate: latest listed central bank rate<br>
+        <span class="live-pill"><i></i> LIVE DATA</span><br>
+        Refresh <strong id="refresh-number">—</strong> · <strong id="refresh-date">Loading…</strong><br>
+        <span id="refresh-age">Checking freshness</span><br>
         <a id="excel-link" href="daily_exports/macro_daily_export_2026-06-25.xlsx">Open latest Excel export</a><br>
-        <a href="data/latest-export.json">Open latest data JSON</a>
-        <div class="refresh-note" id="refresh-note">Hosted data updates weekdays after UK close. Refresh this page after 17:05 London time.</div>
+        <a href="data/latest-export.json">Audit the source snapshot</a>
+        <div class="refresh-note" id="refresh-note">Hosted data refreshes automatically after the UK close.</div>
       </div>
     </div>
+    <nav class="site-nav" aria-label="Dashboard sections">
+      <a href="#overview" data-route="overview">Overview</a>
+      <a href="#countries" data-route="countries">Countries</a>
+      <a href="#markets" data-route="markets">Markets</a>
+      <a href="#updates" data-route="updates">Updates &amp; news</a>
+    </nav>
   </header>
 
   <main>
+    <div id="overview-page" class="page active" data-page="overview">
     <section class="metric-grid">
       <div class="metric"><span>Markets covered</span><strong id="market-count">0</strong><small>UK, G7, Asia, LatAm, and Africa in one view</small></div>
       <div class="metric"><span>Highest policy rate</span><strong id="top-rate">0%</strong><small id="top-rate-name">Across tracked markets</small></div>
@@ -488,6 +497,41 @@
           <a href="https://query1.finance.yahoo.com/v8/finance/chart/GBPUSD%3DX?range=5d&interval=1d">Yahoo chart feed example</a>
         </div>
       </div>
+    </section>
+    </div>
+
+    <section id="countries-page" class="page" data-page="countries" aria-labelledby="countries-title">
+      <div class="page-hero compact">
+        <div>
+          <span class="eyebrow">COUNTRY INTELLIGENCE</span>
+          <h2 id="countries-title">Compare a market, then open its full profile</h2>
+          <p>Every profile adds policy context, release signals, inequality data, market links and a plain-language interpretation.</p>
+        </div>
+        <label class="country-picker">Jump to a country<select id="country-select"><option value="">Choose country…</option></select></label>
+      </div>
+      <div id="country-grid" class="country-grid"></div>
+    </section>
+
+    <section id="country-page" class="page" data-page="country" aria-live="polite">
+      <a class="back-link" href="#countries">← All countries</a>
+      <div id="country-profile"></div>
+    </section>
+
+    <section id="markets-page" class="page" data-page="markets">
+      <div class="page-hero compact">
+        <div><span class="eyebrow">DAILY MARKET TAPE</span><h2>FX and commodities</h2><p>Latest completed daily open and close. Select a row to see the move in context.</p></div>
+        <span class="source-chip">Yahoo Finance chart feed</span>
+      </div>
+      <div id="market-cards" class="market-cards"></div>
+    </section>
+
+    <section id="updates-page" class="page" data-page="updates">
+      <div class="page-hero compact">
+        <div><span class="eyebrow">CONTEXT, NOT NOISE</span><h2>Recent macro updates</h2><p>Headline links from Reuters and Trading Economics, paired with a short explanation of why each theme matters. Open the publisher for the full report.</p></div>
+        <span class="source-chip" id="news-refresh">Latest refresh</span>
+      </div>
+      <div id="news-grid" class="news-grid"></div>
+      <div class="news-disclaimer">Headlines remain the property of their publishers. ABMOTH links to source pages and does not reproduce full articles. Reuters and Trading Economics may apply regional access or subscription limits.</div>
     </section>
   </main>
 
@@ -869,7 +913,7 @@
         const rr = realRate(row);
         return `
           <tr>
-            <td><strong>${row.market}</strong></td>
+            <td><a class="country-link" href="#country=${encodeURIComponent(row.market)}"><strong>${row.market}</strong><span>Open profile →</span></a></td>
             <td>${row.region}</td>
             <td>${formatPct(row.inflation)}<small>annual CPI baseline</small></td>
             <td>${formatPct(row.rate)}<small>${row.rate === null ? "not rate-target based" : "central bank rate"}</small></td>
@@ -915,5 +959,6 @@
     render();
     loadHostedDailyData();
   </script>
+  <script src="app-enhancements.js"></script>
 </body>
 </html>
