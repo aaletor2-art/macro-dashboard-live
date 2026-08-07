@@ -328,6 +328,7 @@
       <a href="/markets" data-route="markets">Markets</a>
       <a href="/calendar" data-route="calendar">Economic calendar</a>
       <a href="/companies" data-route="companies">Companies</a>
+      <a href="/trading-plan" data-route="trading-plan">Trading plan</a>
     </nav>
   </header>
 
@@ -567,6 +568,30 @@
       <div class="company-filter-row"><button class="company-filter active" data-sector="All">All</button><button class="company-filter" data-sector="Banks">Banks</button><button class="company-filter" data-sector="Energy">Energy</button><button class="company-filter" data-sector="Mining">Mining</button><button class="company-filter" data-sector="Technology">Technology</button><button class="company-filter" data-sector="Industrials">Industrials</button></div>
       <div id="company-grid" class="company-grid"></div>
       <div class="news-disclaimer">Quotes are indicative and may be delayed. They are provided for macro monitoring, not execution or investment advice.</div>
+    </section>
+
+    <section id="trading-plan-page" class="page" data-page="trading-plan">
+      <div class="plan-header">
+        <div><span class="eyebrow">LAT TRADING PLAN · RULE-BASED</span><h2>Technical confluence with macro context</h2><p>Select a live market and country, mark only the conditions visible on your chart, then review the deterministic point score. Nothing on this page uses generative AI.</p></div>
+        <span class="source-chip" id="plan-refresh">Connecting live feed…</span>
+      </div>
+      <div class="plan-controls">
+        <label>Market<select id="plan-asset"></select></label>
+        <label>Country context<select id="plan-country"></select></label>
+        <label>Direction<select id="plan-direction"><option>Buy</option><option>Sell</option></select></label>
+      </div>
+      <div class="plan-layout">
+        <div class="plan-main">
+          <section class="plan-card chart-card"><div class="plan-card-head"><div><span>LIVE PRICE</span><h3 id="plan-price">—</h3></div><div id="plan-change" class="badge flat">—</div></div><canvas id="plan-chart" width="900" height="320" aria-label="Recent market price chart with Bollinger Bands"></canvas><div class="chart-legend"><span><i class="price-line"></i>Price</span><span><i class="middle-line"></i>20-period mean</span><span><i class="band-line"></i>2σ bands</span></div></section>
+          <section class="plan-card"><div class="plan-card-head"><div><span>TECHNICAL READ</span><h3>Bollinger Bands &amp; stochastic</h3></div><span class="rule-badge">Calculated</span></div><div id="technical-read" class="technical-read"></div></section>
+          <section class="plan-card"><div class="plan-card-head"><div><span>FUNDAMENTALS</span><h3 id="fundamental-country">Country context</h3></div><span class="rule-badge">Sheet data</span></div><div id="fundamental-read" class="fundamental-read"></div></section>
+        </div>
+        <aside class="plan-side">
+          <section class="score-card"><span>COMBINED CONVICTION</span><strong id="combined-score">0</strong><small>/100</small><div id="conviction-label">Waiting for inputs</div><div class="score-breakdown"><span>Technical<strong id="technical-score">0/100</strong></span><span>Fundamental<strong id="fundamental-score">0/100</strong></span></div></section>
+          <section class="plan-card"><div class="plan-card-head"><div><span>POINT SYSTEM</span><h3 id="point-total">0 / 18 points</h3></div></div><div id="indicator-checklist" class="indicator-checklist"></div></section>
+          <section class="plan-card plan-rule"><strong>Decision rule</strong><p>0–4 weak setup · 5–7 watch only · 8–10 trade possible · 11+ strong confluence. Combined conviction uses 60% technical and 40% fundamental evidence.</p></section>
+        </aside>
+      </div>
     </section>
 
     <section id="updates-page" class="page" data-page="updates">

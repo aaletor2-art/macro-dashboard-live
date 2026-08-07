@@ -28,7 +28,7 @@
     let pageName = "countries";
     let value = null;
     if (parts[0] === "countries" && parts[1]) { pageName = "country"; value = parts.slice(1).join("-"); }
-    else if (["markets","calendar","companies"].includes(parts[0])) pageName = parts[0];
+    else if (["markets","calendar","companies","trading-plan"].includes(parts[0])) pageName = parts[0];
     document.querySelectorAll(".page").forEach(page => page.classList.toggle("active", page.dataset.page === pageName));
     document.querySelectorAll(".site-nav a").forEach(link => link.classList.toggle("active", link.dataset.route === (pageName === "country" ? "countries" : pageName)));
     if (pageName === "country") {
@@ -38,6 +38,7 @@
     if (pageName === "markets") renderMarkets();
     if (pageName === "calendar") renderFullCalendar();
     if (pageName === "companies") renderCompanies();
+    if (pageName === "trading-plan") renderTradingPlan();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -157,6 +158,77 @@
     }).join("");
   }
 
+  const planIndicators = [
+    ["support-resistance","Support / resistance",3], ["trend","Trend",3], ["trendline","Trendline",1], ["channel","Channel",1], ["fib-50","Fibonacci 50%",1], ["fib-618","Fibonacci 61.8%",1], ["macd-obos","MACD overbought / oversold",1], ["macd-divergence","MACD divergence",2], ["macd-crossover","MACD crossover",1], ["bollinger-rejection","Bollinger Band rejection",1], ["stochastic-confirmation","Stochastic confirmation",1], ["round-number","Round-number support / resistance",2]
+  ];
+
+  function clamp(value) { return Math.max(0, Math.min(100, Math.round(value))); }
+  function conviction(score) { return score < 40 ? "Low confidence" : score < 60 ? "Watch only" : score < 75 ? "Moderate confidence" : score < 85 ? "High confidence" : "Very high confidence"; }
+
+  function drawPlanChart(item) {
+    const canvas = document.getElementById("plan-chart");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const points = item?.chart || [];
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    if (points.length < 2) { ctx.fillStyle="#66706b"; ctx.font="16px sans-serif"; ctx.fillText("Waiting for live price history",28,46); return; }
+    const band = item.technical?.bollinger;
+    const values = [...points, band?.upper, band?.lower].filter(Number.isFinite);
+    const min = Math.min(...values), max = Math.max(...values), range = max-min || 1;
+    const pad = {x:42,y:26};
+    const x = index => pad.x + index * ((canvas.width-pad.x*2)/(points.length-1));
+    const y = value => canvas.height-pad.y-((value-min)/range)*(canvas.height-pad.y*2);
+    ctx.strokeStyle="#e1e5e2"; ctx.lineWidth=1;
+    [0,.25,.5,.75,1].forEach(step=>{const yy=pad.y+step*(canvas.height-pad.y*2);ctx.beginPath();ctx.moveTo(pad.x,yy);ctx.lineTo(canvas.width-pad.x,yy);ctx.stroke()});
+    if (band) [[band.upper,"#9aa49f",[5,5]],[band.lower,"#9aa49f",[5,5]],[band.middle,"#087a55",[]]].forEach(([value,color,dash])=>{ctx.strokeStyle=color;ctx.setLineDash(dash);ctx.beginPath();ctx.moveTo(pad.x,y(value));ctx.lineTo(canvas.width-pad.x,y(value));ctx.stroke()});
+    ctx.setLineDash([]);ctx.strokeStyle="#111827";ctx.lineWidth=2.5;ctx.beginPath();points.forEach((value,index)=>index?ctx.lineTo(x(index),y(value)):ctx.moveTo(x(index),y(value)));ctx.stroke();
+    ctx.fillStyle="#65706b";ctx.font="12px sans-serif";ctx.fillText(number(max,4),4,pad.y+4);ctx.fillText(number(min,4),4,canvas.height-pad.y+4);
+  }
+
+  function renderTradingPlan() {
+    const assetSelect = document.getElementById("plan-asset");
+    const countrySelect = document.getElementById("plan-country");
+    if (!assetSelect || !countrySelect) return;
+    if (!assetSelect.dataset.bound) {
+      assetSelect.innerHTML = (live.markets || []).map(row => `<option value="${row.symbol}">${row.asset}</option>`).join("") || `<option>Waiting for live markets…</option>`;
+      countrySelect.innerHTML = markets.map(row => `<option value="${encodeURIComponent(row.market)}">${flags[row.market] || "🌍"} ${row.market}</option>`).join("");
+      document.getElementById("indicator-checklist").innerHTML = planIndicators.map(([id,label,points]) => `<label class="indicator-row"><input type="checkbox" data-indicator="${id}"><span>${label}</span><span>${points} pt${points===1?"":"s"}</span></label>`).join("");
+      [assetSelect,countrySelect,document.getElementById("plan-direction")].forEach(input => input.addEventListener("change", renderTradingPlan));
+      document.querySelectorAll("[data-indicator]").forEach(input => input.addEventListener("change", renderTradingPlan));
+      assetSelect.dataset.bound="true";
+    } else if (assetSelect.options.length <= 1 && live.markets?.length) {
+      assetSelect.innerHTML = live.markets.map(row => `<option value="${row.symbol}">${row.asset}</option>`).join("");
+    }
+    const item = (live.markets || []).find(row => row.symbol === assetSelect.value) || live.markets?.[0];
+    const countryName = decodeURIComponent(countrySelect.value || "United Kingdom");
+    const country = markets.find(row => row.market === countryName) || markets[0];
+    const direction = document.getElementById("plan-direction").value;
+    const activePoints = [...document.querySelectorAll("[data-indicator]:checked")].reduce((sum,input) => sum + (planIndicators.find(([id])=>id===input.dataset.indicator)?.[2] || 0),0);
+    const maxPoints = planIndicators.reduce((sum,item)=>sum+item[2],0);
+    const technicalScore = clamp((activePoints/maxPoints)*100);
+    const real = realRateFor(country);
+    let macroTilt = 0;
+    if (/hawk|hike|restrict/i.test(country.bias)) macroTilt += 15;
+    if (/easing|support|cool/i.test(`${country.bias} ${country.temp}`)) macroTilt -= 15;
+    if (real != null) macroTilt += real > 0 ? 8 : -8;
+    if (country.inflation > 5) macroTilt += 7;
+    const fundamentalScore = clamp(50 + (direction === "Buy" ? macroTilt : -macroTilt));
+    const combined = clamp(technicalScore*.6 + fundamentalScore*.4);
+    document.getElementById("point-total").textContent=`${activePoints} / ${maxPoints} points`;
+    document.getElementById("technical-score").textContent=`${technicalScore}/100`;
+    document.getElementById("fundamental-score").textContent=`${fundamentalScore}/100`;
+    document.getElementById("combined-score").textContent=combined;
+    document.getElementById("conviction-label").textContent=conviction(combined);
+    document.getElementById("fundamental-country").textContent=`${country.market} context`;
+    document.getElementById("fundamental-read").innerHTML=`<div class="read-cell"><span>INFLATION</span><strong>${pct(country.inflation)}</strong><small>${country.temp} regime</small></div><div class="read-cell"><span>POLICY RATE</span><strong>${pct(country.rate)}</strong><small>${country.bias}</small></div><div class="read-cell"><span>REAL RATE</span><strong>${pct(real)}</strong><small>Policy minus CPI</small></div><div class="read-cell"><span>PRESSURE</span><strong>${country.pressure}/100</strong><small>${country.watch}</small></div><div class="read-cell"><span>DIRECTIONAL SCORE</span><strong>${fundamentalScore}/100</strong><small>${direction} rule result</small></div><div class="read-cell"><span>EVENT CHECK</span><strong>${hosted.calendarLines?.some(line=>line[0]===latestIndicator(country.market)?.currency)?"Mapped":"Manual"}</strong><small>Review calendar before entry</small></div>`;
+    const bb=item?.technical?.bollinger, stoch=item?.technical?.stochastic;
+    document.getElementById("technical-read").innerHTML=`<div class="read-cell"><span>BB POSITION</span><strong>${bb?.position || "Waiting"}</strong><small>20-period, 2 standard deviations</small></div><div class="read-cell"><span>BB MIDDLE</span><strong>${number(bb?.middle,5)}</strong><small>Upper ${number(bb?.upper,5)} · Lower ${number(bb?.lower,5)}</small></div><div class="read-cell"><span>STOCHASTIC</span><strong>${stoch?.state || "Waiting"}</strong><small>%K ${number(stoch?.k,1)} · %D ${number(stoch?.d,1)}</small></div>`;
+    document.getElementById("plan-price").textContent=item?`${number(item.price,item.price>100?2:5)}`:"—";
+    const change=document.getElementById("plan-change");change.textContent=item?`${item.changePct>=0?"+":""}${number(item.changePct)}%`:"—";change.className=`badge ${!item||Math.abs(item.changePct||0)<.01?"flat":item.changePct>0?"up":"down"}`;
+    document.getElementById("plan-refresh").textContent=live.generatedAt?`Live ${new Date(live.generatedAt).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}`:"Hosted fallback";
+    drawPlanChart(item);
+  }
+
   function whyItMatters(title) {
     const text = title.toLowerCase();
     if (text.includes("inflation") || text.includes("price")) return "Inflation changes the likely path of interest rates, real incomes and currency pressure.";
@@ -202,7 +274,7 @@
     } catch {
       document.getElementById("company-refresh").textContent = "Hosted fallback";
     }
-    renderMarkets(); renderNews(); renderLandingNews(); renderFullCalendar(); renderCompanies(); renderOverview(); route();
+    renderMarkets(); renderNews(); renderLandingNews(); renderFullCalendar(); renderCompanies(); renderTradingPlan(); renderOverview(); route();
   }
 
   renderCountryGrid();
