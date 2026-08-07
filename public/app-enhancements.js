@@ -371,7 +371,7 @@
 
   async function hydrate() {
     try {
-      const response = await fetch(`data/latest-export.json?ui=${Date.now()}`, { cache:"no-store" });
+      const response = await fetch(`/data/latest-export.json?ui=${Date.now()}`, { cache:"no-store" });
       hosted = await response.json();
       const generated = new Date(hosted.generatedAt);
       const ageHours = Math.max(0, Math.floor((Date.now() - generated.getTime()) / 3600000));
