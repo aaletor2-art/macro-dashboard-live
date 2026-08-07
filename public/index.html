@@ -322,8 +322,8 @@
         <span class="live-pill"><i></i> LIVE DATA</span><br>
         Refresh <strong id="refresh-number">—</strong> · <strong id="refresh-date">Loading…</strong><br>
         <span id="refresh-age">Checking freshness</span><br>
-        <a id="excel-link" href="daily_exports/macro_daily_export_2026-06-25.xlsx">Open latest Excel export</a><br>
-        <a href="data/latest-export.json">Audit the source snapshot</a>
+        <a id="excel-link" href="/daily_exports/macro_daily_export_2026-06-25.xlsx">Open latest Excel export</a><br>
+        <a href="/data/latest-export.json">Audit the source snapshot</a>
         <div class="refresh-note" id="refresh-note">Hosted data refreshes automatically after the UK close.</div>
       </div>
     </div>
@@ -922,7 +922,7 @@
           close: row.close,
           convention: row.convention
         }));
-        if (data.href) excelLink.href = data.href.replace(/^\//, "");
+        if (data.href) excelLink.href = data.href.startsWith("/") ? data.href : `/${data.href}`;
         const refreshLine = document.querySelector(".meta");
         if (refreshLine) {
           refreshLine.innerHTML = refreshLine.innerHTML.replace(
