@@ -29,13 +29,14 @@
     const parts = location.pathname.split("/").filter(Boolean);
     let pageName = "countries";
     let value = null;
-    if (parts[0] === "countries" && parts[1]) { pageName = "country"; value = parts.slice(1).join("-"); }
+    const historyView = parts[0] === "countries" && parts[1] && parts[2] === "history";
+    if (parts[0] === "countries" && parts[1]) { pageName = "country"; value = parts[1]; }
     else if (["markets","calendar","companies","trading-plan"].includes(parts[0])) pageName = parts[0];
     document.querySelectorAll(".page").forEach(page => page.classList.toggle("active", page.dataset.page === pageName));
     document.querySelectorAll(".site-nav a").forEach(link => link.classList.toggle("active", link.dataset.route === (pageName === "country" ? "countries" : pageName)));
     if (pageName === "country") {
       const name = Object.entries(countryCodes).find(([,slug]) => slug === decodeURIComponent(value || ""))?.[0] || "United Kingdom";
-      renderCountry(name);
+      historyView ? renderCountryHistory(name) : renderCountry(name);
     }
     if (pageName === "markets") renderMarkets();
     if (pageName === "calendar") renderFullCalendar();
@@ -92,11 +93,6 @@
         <div class="profile-title"><span class="flag" aria-hidden="true">${flags[row.market] || "🌍"}</span><div><span class="eyebrow">${row.region.toUpperCase()}</span><h2>${row.market}</h2><p>${row.bias} · Last dashboard refresh ${hosted.date || "pending"}</p></div></div>
         <div class="pressure-dial" style="--score:${row.pressure}"><div><strong>${row.pressure}</strong><span>PRESSURE / 100</span></div></div>
       </div>
-      <section class="history-card" aria-labelledby="history-title">
-        <div class="history-head"><div><span class="eyebrow">RELEASE HISTORY</span><h3 id="history-title">Inflation over time</h3><p id="history-subtitle">Loading official historical observations…</p></div><div class="history-ranges" role="group" aria-label="History range"><button class="history-range active" data-history-range="25">Last 25 releases</button><button class="history-range" data-history-range="5y">Last 5 years</button></div></div>
-        <div class="history-chart-wrap"><canvas id="history-chart" width="1100" height="390" aria-label="Interactive inflation history chart"></canvas><div id="history-tooltip" class="history-tooltip" hidden></div></div>
-        <div class="history-foot"><span id="history-latest">Latest: —</span><span id="history-source">Source: loading</span><a id="history-source-link" target="_blank" rel="noopener">Open source ↗</a></div>
-      </section>
       <div class="profile-grid">
         <div class="insight-card"><h3>Macro snapshot</h3><div class="profile-metrics">
           <div class="profile-metric"><span>INFLATION</span><strong>${pct(row.inflation)}</strong><small>Annual CPI baseline</small></div>
@@ -111,17 +107,23 @@
           <a target="_blank" rel="noopener" href="https://www.reuters.com/site-search/?query=${sourceQuery(row.market)}">Reuters search ↗</a>
           <a target="_blank" rel="noopener" href="https://data.worldbank.org/country/${teSlug}">World Bank ↗</a>
         </div></div>
-        <div class="insight-card"><h3>Latest mapped releases</h3>${releaseRows(row.market)}</div>
+        <div class="insight-card"><div class="card-title-row"><h3>Latest mapped releases</h3><a href="/countries/${teSlug}/history">Historical data →</a></div>${releaseRows(row.market)}<a class="data-deep-link" href="/countries/${teSlug}/history"><span>INFLATION HISTORY</span><strong>25 releases · 5-year chart · release table</strong><small>Open the full historical dataset →</small></a></div>
         <div class="insight-card"><h3>Decision checklist</h3><div class="note-list" style="padding:0"><div class="note red"><strong>Primary risk</strong><span>${row.watch}</span></div><div class="note amber"><strong>Policy signal</strong><span>${row.bias}</span></div><div class="note green"><strong>What changes the view</strong><span>A material inflation surprise, a central-bank communication shift, or a sharp currency move.</span></div></div></div>
       </div>`;
-    historyRange = "25";
-    historyPayload = null;
-    document.querySelectorAll("[data-history-range]").forEach(button => button.addEventListener("click", () => {
-      historyRange = button.dataset.historyRange;
-      document.querySelectorAll("[data-history-range]").forEach(item => item.classList.toggle("active", item === button));
-      drawHistoryChart();
-    }));
-    loadCountryHistory(teSlug);
+  }
+
+  function renderCountryHistory(name) {
+    const row = markets.find(item => item.market === name) || markets[0];
+    const slug = countryCodes[row.market] || row.market.toLowerCase().replaceAll(" ", "-");
+    document.getElementById("country-profile").innerHTML = `
+      <a class="back-link" href="/countries/${slug}">← Back to ${row.market} summary</a>
+      <div class="history-page-head"><div><span class="flag">${flags[row.market] || "🌍"}</span><span class="eyebrow">${row.region.toUpperCase()} · HISTORICAL DATA</span><h2>${row.market} inflation releases</h2><p>Monthly or annual year-on-year consumer-price history from the linked public source.</p></div><div class="history-ranges" role="group" aria-label="History range"><button class="history-range active" data-history-range="25">Last 25 releases</button><button class="history-range" data-history-range="5y">Last 5 years</button></div></div>
+      <div class="history-stat-grid"><div><span>LATEST</span><strong id="history-stat-latest">—</strong><small id="history-stat-date">Loading</small></div><div><span>25-RELEASE HIGH</span><strong id="history-stat-high">—</strong><small id="history-stat-high-date">—</small></div><div><span>25-RELEASE LOW</span><strong id="history-stat-low">—</strong><small id="history-stat-low-date">—</small></div><div><span>LATEST CHANGE</span><strong id="history-stat-change">—</strong><small>percentage points</small></div></div>
+      <section class="history-card" aria-labelledby="history-title"><div class="history-head"><div><span class="eyebrow">TREND</span><h3 id="history-title">Inflation over time</h3><p id="history-subtitle">Loading official historical observations…</p></div></div><div class="history-chart-wrap"><canvas id="history-chart" width="1100" height="390" aria-label="Interactive inflation history chart"></canvas><div id="history-tooltip" class="history-tooltip" hidden></div></div><div class="history-foot"><span id="history-latest">Latest: —</span><span id="history-source">Source: loading</span><a id="history-source-link" target="_blank" rel="noopener">Open source ↗</a></div></section>
+      <section class="release-table-card"><div class="card-title-row"><div><span class="eyebrow">OBSERVATIONS</span><h3>Latest 25 releases</h3></div><span class="table-note">Newest first</span></div><div class="table-wrap"><table><thead><tr><th>Release date</th><th>Inflation</th><th>Change</th><th>Direction</th></tr></thead><tbody id="history-release-body"><tr><td colspan="4">Loading observations…</td></tr></tbody></table></div></section>`;
+    historyRange = "25"; historyPayload = null;
+    document.querySelectorAll("[data-history-range]").forEach(button => button.addEventListener("click", () => { historyRange = button.dataset.historyRange; document.querySelectorAll("[data-history-range]").forEach(item => item.classList.toggle("active", item === button)); drawHistoryChart(); }));
+    loadCountryHistory(slug);
   }
 
   async function loadCountryHistory(slug) {
@@ -134,6 +136,16 @@
       const link = document.getElementById("history-source-link"); link.href = historyPayload.sourceUrl;
       const latest = historyPayload.observations.at(-1);
       document.getElementById("history-latest").textContent = latest ? `Latest: ${pct(latest.value)} · ${new Date(`${latest.date}T00:00:00Z`).toLocaleDateString("en-GB",{month:"short",year:"numeric"})}` : "Latest: unavailable";
+      const recent = historyPayload.observations.slice(-25), previous = recent.at(-2);
+      const high = recent.reduce((best,item) => item.value > best.value ? item : best, recent[0]);
+      const low = recent.reduce((best,item) => item.value < best.value ? item : best, recent[0]);
+      const dateLabel = item => new Date(`${item.date}T00:00:00Z`).toLocaleDateString("en-GB",{month:"short",year:"numeric"});
+      document.getElementById("history-stat-latest").textContent = latest ? pct(latest.value) : "—";
+      document.getElementById("history-stat-date").textContent = latest ? dateLabel(latest) : "—";
+      document.getElementById("history-stat-high").textContent = pct(high.value); document.getElementById("history-stat-high-date").textContent = dateLabel(high);
+      document.getElementById("history-stat-low").textContent = pct(low.value); document.getElementById("history-stat-low-date").textContent = dateLabel(low);
+      document.getElementById("history-stat-change").textContent = latest && previous ? `${latest.value-previous.value>=0?"+":""}${(latest.value-previous.value).toFixed(2)}` : "—";
+      document.getElementById("history-release-body").innerHTML = [...recent].reverse().map((item,index,array) => { const older=array[index+1]; const change=older ? item.value-older.value : null; return `<tr><td><strong>${new Date(`${item.date}T00:00:00Z`).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}</strong></td><td>${pct(item.value)}</td><td>${change==null?"—":`${change>=0?"+":""}${change.toFixed(2)} pp`}</td><td><span class="badge ${change==null||Math.abs(change)<.01?"flat":change>0?"up":"down"}">${change==null?"Baseline":change>0?"Higher":change<0?"Lower":"Unchanged"}</span></td></tr>`; }).join("");
       drawHistoryChart();
     } catch {
       document.getElementById("history-subtitle").textContent = "Historical observations are temporarily unavailable. The latest dashboard value remains above.";
