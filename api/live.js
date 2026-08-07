@@ -19,24 +19,47 @@ const marketAssets = [
   ["Australian Dollar", "AUDUSD=X", "USD per 1 AUD", false], ["Canadian Dollar", "CAD=X", "USD per 1 CAD", true], ["Swiss Franc", "CHF=X", "USD per 1 CHF", true], ["Euro", "EURUSD=X", "USD per 1 EUR", false], ["British Pound", "GBPUSD=X", "USD per 1 GBP", false], ["Japanese Yen", "JPY=X", "USD per 1 JPY", true], ["New Zealand Dollar", "NZDUSD=X", "USD per 1 NZD", false], ["US Dollar Index", "DX-Y.NYB", "Index points", false], ["Gold", "GC=F", "USD futures price", false], ["Silver", "SI=F", "USD futures price", false], ["WTI Crude", "CL=F", "USD futures price", false], ["Brent Crude", "BZ=F", "USD futures price", false], ["Natural Gas", "NG=F", "USD futures price", false], ["Copper", "HG=F", "USD futures price", false], ["Corn", "ZC=F", "USD futures price", false], ["Wheat", "ZW=F", "USD futures price", false], ["Soybeans", "ZS=F", "USD futures price", false], ["Coffee", "KC=F", "USD futures price", false], ["Cocoa", "CC=F", "USD futures price", false]
 ];
 
-async function quote([name, symbol, sector, country]) {
+function technicals(closes, highs, lows) {
+  const clean = closes.filter(value => Number.isFinite(value));
+  const window = clean.slice(-20);
+  if (window.length < 14) return null;
+  const middle = window.reduce((sum, value) => sum + value, 0) / window.length;
+  const deviation = Math.sqrt(window.reduce((sum, value) => sum + (value - middle) ** 2, 0) / window.length);
+  const upper = middle + deviation * 2;
+  const lower = middle - deviation * 2;
+  const last = clean.at(-1);
+  const kValues = [2, 1, 0].map(offset => {
+    const end = closes.length - offset;
+    const close = closes[end - 1];
+    const high = Math.max(...highs.slice(Math.max(0, end - 14), end).filter(Number.isFinite));
+    const low = Math.min(...lows.slice(Math.max(0, end - 14), end).filter(Number.isFinite));
+    return high === low ? 50 : ((close - low) / (high - low)) * 100;
+  });
+  const stochasticK = kValues[2];
+  const stochasticD = kValues.reduce((sum, value) => sum + value, 0) / kValues.length;
+  return { bollinger: { upper, middle, lower, position: last >= upper ? "Above upper" : last <= lower ? "Below lower" : last >= middle ? "Upper half" : "Lower half" }, stochastic: { k: stochasticK, d: stochasticD, state: stochasticK >= 80 ? "Overbought" : stochasticK <= 20 ? "Oversold" : "Neutral" } };
+}
+
+async function quote([name, symbol, sector, country], options = {}) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=1d&interval=5m`;
   const response = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" }, signal: AbortSignal.timeout(8000) });
   if (!response.ok) throw new Error(`${symbol}: ${response.status}`);
   const result = (await response.json()).chart?.result?.[0];
   const meta = result?.meta || {};
-  const closes = result?.indicators?.quote?.[0]?.close || [];
-  const price = [...closes].reverse().find(value => value != null) ?? meta.regularMarketPrice;
-  const previousClose = meta.chartPreviousClose ?? meta.previousClose;
-  return { name, symbol, sector, country, currency: meta.currency, exchange: meta.exchangeName, price, previousClose, changePct: previousClose ? (price / previousClose - 1) * 100 : null, marketTime: meta.regularMarketTime ? new Date(meta.regularMarketTime * 1000).toISOString() : null };
+  const raw = result?.indicators?.quote?.[0] || {};
+  const invertValue = value => options.invert && value ? 1 / value : value;
+  const closes = (raw.close || []).map(invertValue);
+  const highs = (raw.high || []).map((value, index) => options.invert && raw.low?.[index] ? 1 / raw.low[index] : value);
+  const lows = (raw.low || []).map((value, index) => options.invert && raw.high?.[index] ? 1 / raw.high[index] : value);
+  const price = [...closes].reverse().find(value => value != null) ?? invertValue(meta.regularMarketPrice);
+  const previousClose = invertValue(meta.chartPreviousClose ?? meta.previousClose);
+  return { name, symbol, sector, country, currency: meta.currency, exchange: meta.exchangeName, price, previousClose, changePct: previousClose ? (price / previousClose - 1) * 100 : null, marketTime: meta.regularMarketTime ? new Date(meta.regularMarketTime * 1000).toISOString() : null, ...(options.technical ? { technical: technicals(closes, highs, lows), chart: closes.filter(Number.isFinite).slice(-30) } : {}) };
 }
 
 async function marketQuote([asset, symbol, convention, invert]) {
-  const item = await quote([asset, symbol, convention, "Market"]);
+  const item = await quote([asset, symbol, convention, "Market"], { invert, technical: true });
   if (item.unavailable) return item;
-  const price = invert ? 1 / item.price : item.price;
-  const previousClose = invert ? 1 / item.previousClose : item.previousClose;
-  return { asset, symbol, convention, price, previousClose, changePct: previousClose ? (price / previousClose - 1) * 100 : null, marketTime: item.marketTime };
+  return { asset, symbol, convention, price: item.price, previousClose: item.previousClose, changePct: item.changePct, marketTime: item.marketTime, technical: item.technical, chart: item.chart };
 }
 
 export default async function handler(request, response) {
