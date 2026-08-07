@@ -33,7 +33,7 @@ async function quote(company) {
   if (!response.ok) throw new Error(`${response.status}`);
   const result=(await response.json()).chart?.result?.[0], meta=result?.meta||{}, raw=result?.indicators?.quote?.[0]||{};
   const chart=(raw.close||[]).map((value,index)=>({date:new Date((result.timestamp?.[index]||0)*1000).toISOString().slice(0,10),value})).filter(x=>Number.isFinite(x.value));
-  const price=chart.at(-1)?.value??meta.regularMarketPrice, previousClose=meta.chartPreviousClose??meta.previousClose;
+  const price=chart.at(-1)?.value??meta.regularMarketPrice, previousClose=chart.at(-2)?.value??meta.previousClose;
   return {...company,price,previousClose,changePct:previousClose?(price/previousClose-1)*100:null,currency:meta.currency,exchange:meta.exchangeName,marketTime:meta.regularMarketTime?new Date(meta.regularMarketTime*1000).toISOString():null,chart};
 }
 
