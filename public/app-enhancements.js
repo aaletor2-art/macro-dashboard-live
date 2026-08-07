@@ -98,7 +98,8 @@
     if (!data) return `<div class="empty-state">No workbook release row is mapped for this market yet. Use the official source links below for the latest national release.</div>`;
     const fields = [["Inflation",data.cpi],["GDP",data.gdp],["Manufacturing PMI",data.man_pmi],["Services PMI",data.serv_pmi],["Unemployment",data.unemp],["Business confidence",data.bus_conf]];
     const slug = countryCodes[country] || country.toLowerCase().replaceAll(" ", "-");
-    return `<div class="release-list">${fields.map(([label,item]) => `<a class="release-row" href="${label === "Inflation" ? `/countries/${slug}/history` : `/calendar?indicator=${encodeURIComponent(label)}&country=${encodeURIComponent(country)}`}" title="${indicatorGuides[label]}"><div><strong>${label}</strong><small>Previous ${number(item.previous,1)} · Forecast ${number(item.forecast,1)} · Open detail →</small></div><span class="badge ${signalClass(item.change || 0)}">${number(item.current,1)}</span></a>`).join("")}</div>`;
+    const historyKeys = { Inflation:"inflation", GDP:"gdp", Unemployment:"unemployment" };
+    return `<div class="release-list">${fields.map(([label,item]) => `<a class="release-row" href="${historyKeys[label] ? `/countries/${slug}/history?indicator=${historyKeys[label]}` : `/calendar?indicator=${encodeURIComponent(label)}&country=${encodeURIComponent(country)}`}" title="${indicatorGuides[label]}"><div><strong>${label}</strong><small>Previous ${number(item.previous,1)} · Forecast ${number(item.forecast,1)} · Open detail →</small></div><span class="badge ${signalClass(item.change || 0)}">${number(item.current,1)}</span></a>`).join("")}</div>`;
   }
 
   function recentBriefHtml(row) {
@@ -133,46 +134,82 @@
           <a target="_blank" rel="noopener" href="https://www.reuters.com/site-search/?query=${sourceQuery(row.market)}">Reuters search ↗</a>
           <a target="_blank" rel="noopener" href="https://data.worldbank.org/country/${teSlug}">World Bank ↗</a>
         </div></div>
-        <div class="insight-card"><div class="card-title-row"><h3>Latest mapped releases</h3><a href="/countries/${teSlug}/history">Historical data →</a></div>${releaseRows(row.market)}<a class="data-deep-link" href="/countries/${teSlug}/history"><span>INFLATION HISTORY</span><strong>25 releases · 5-year chart · release table</strong><small>Open the full historical dataset →</small></a></div>
+        <div class="insight-card"><div class="card-title-row"><h3>Latest mapped releases</h3><a href="/countries/${teSlug}/history">Historical data →</a></div>${releaseRows(row.market)}<div class="history-link-grid">${[["Inflation","inflation"],["GDP growth","gdp"],["Unemployment","unemployment"],["Inequality","gini"]].map(([label,key])=>`<a href="/countries/${teSlug}/history?indicator=${key}"><span>${label}</span><small>25 observations · interactive chart →</small></a>`).join("")}</div></div>
         <div class="insight-card"><h3>Decision checklist</h3><div class="note-list" style="padding:0"><div class="note red"><strong>Primary risk</strong><span>${row.watch}</span></div><div class="note amber"><strong>Policy signal</strong><span>${row.bias}</span></div><div class="note green"><strong>What changes the view</strong><span>A material inflation surprise, a central-bank communication shift, or a sharp currency move.</span></div></div></div>
-      </div><section class="country-companies"><div class="card-title-row"><div><span class="eyebrow">COUNTRY BELLWETHERS</span><h3>Five companies carrying the macro signal</h3></div><a href="/companies?country=${encodeURIComponent(row.market)}">Open company hub →</a></div><div class="country-company-strip">${companyUniverse.filter(company=>company.country===row.market).slice(0,5).map(company=>`<a href="/companies/${company.id}"><img src="https://www.google.com/s2/favicons?domain=${company.domain}&sz=64" alt=""><span><strong>${company.name}</strong><small>${company.sector}${company.symbol?` · ${company.symbol}`:" · price feed not available"}</small></span></a>`).join("") || `<div class="empty-state">Loading country companies…</div>`}</div></section><div id="country-comparison" class="comparison-mount"></div>`;
+      </div><section class="country-companies"><div class="card-title-row"><div><span class="eyebrow">COUNTRY BELLWETHERS</span><h3>Five companies carrying the macro signal</h3></div><a href="/companies?country=${encodeURIComponent(row.market)}">Open company hub →</a></div><div class="country-company-strip">${companyUniverse.filter(company=>company.country===row.market).slice(0,5).map(company=>`<a href="/companies/${company.id}"><img src="https://www.google.com/s2/favicons?domain=${company.domain}&sz=64" alt=""><span><strong>${company.name}</strong><small>${company.sector}${company.symbol?` · ${company.symbol}`:" · price feed not available"}</small></span></a>`).join("") || `<div class="empty-state">Loading country companies…</div>`}</div></section><div id="pair-pressure" class="comparison-mount"></div><div id="country-comparison" class="comparison-mount"></div>`;
+    renderPairPressure("pair-pressure", row.market);
     renderComparison("country-comparison", [row.market,"United States","China"]);
   }
 
   function renderCountryHistory(name) {
     const row = markets.find(item => item.market === name) || markets[0];
     const slug = countryCodes[row.market] || row.market.toLowerCase().replaceAll(" ", "-");
+    const requested = new URLSearchParams(location.search).get("indicator") || "inflation";
+    const labels = { inflation:"Inflation", gdp:"GDP growth", unemployment:"Unemployment", gini:"Inequality" };
+    const selectedLabel = labels[requested] || labels.inflation;
     document.getElementById("country-profile").innerHTML = `
       <a class="back-link" href="/countries/${slug}">← Back to ${row.market} summary</a>
-      <div class="history-page-head"><div><span class="flag">${flags[row.market] || "🌍"}</span><span class="eyebrow">${row.region.toUpperCase()} · HISTORICAL DATA</span><h2>${row.market} inflation releases</h2><p>Monthly or annual year-on-year consumer-price history from the linked public source.</p></div><div class="history-ranges" role="group" aria-label="History range"><button class="history-range active" data-history-range="25">Last 25 releases</button><button class="history-range" data-history-range="5y">Last 5 years</button></div></div>
+      <div class="history-page-head"><div><span class="flag">${flags[row.market] || "🌍"}</span><span class="eyebrow">${row.region.toUpperCase()} · HISTORICAL DATA</span><h2>${row.market} <span id="history-heading">${selectedLabel.toLowerCase()}</span></h2><p>Verified public-source observations, with the latest 25 readings and five-year view.</p></div><div class="history-controls"><label>Dataset<select id="history-indicator">${Object.entries(labels).map(([key,label])=>`<option value="${key}" ${key===requested?"selected":""}>${label}</option>`).join("")}</select></label><div class="history-ranges" role="group" aria-label="History range"><button class="history-range active" data-history-range="25">Last 25</button><button class="history-range" data-history-range="5y">Last 5 years</button></div></div></div>
       <div class="history-stat-grid"><div><span>LATEST</span><strong id="history-stat-latest">—</strong><small id="history-stat-date">Loading</small></div><div><span>25-RELEASE HIGH</span><strong id="history-stat-high">—</strong><small id="history-stat-high-date">—</small></div><div><span>25-RELEASE LOW</span><strong id="history-stat-low">—</strong><small id="history-stat-low-date">—</small></div><div><span>LATEST CHANGE</span><strong id="history-stat-change">—</strong><small>percentage points</small></div></div>
-      <section class="history-card" aria-labelledby="history-title"><div class="history-head"><div><span class="eyebrow">TREND</span><h3 id="history-title">Inflation over time</h3><p id="history-subtitle">Loading official historical observations…</p></div></div><div class="history-chart-wrap"><canvas id="history-chart" width="1100" height="390" aria-label="Interactive inflation history chart"></canvas><div id="history-tooltip" class="history-tooltip" hidden></div></div><div class="history-foot"><span id="history-latest">Latest: —</span><span id="history-source">Source: loading</span><a id="history-source-link" target="_blank" rel="noopener">Open source ↗</a></div></section>
-      <section class="release-table-card"><div class="card-title-row"><div><span class="eyebrow">OBSERVATIONS</span><h3>Latest 25 releases</h3></div><span class="table-note">Newest first</span></div><div class="table-wrap"><table><thead><tr><th>Release date</th><th>Inflation</th><th>Change</th><th>Direction</th></tr></thead><tbody id="history-release-body"><tr><td colspan="4">Loading observations…</td></tr></tbody></table></div></section>`;
+      <section class="history-card" aria-labelledby="history-title"><div class="history-head"><div><span class="eyebrow">TREND</span><h3 id="history-title">${selectedLabel} over time</h3><p id="history-subtitle">Loading official historical observations…</p></div></div><div class="history-chart-wrap"><canvas id="history-chart" width="1100" height="390" aria-label="Interactive historical chart"></canvas><div id="history-tooltip" class="history-tooltip" hidden></div></div><div class="history-foot"><span id="history-latest">Latest: —</span><span id="history-source">Source: loading</span><a id="history-source-link" target="_blank" rel="noopener">Open source ↗</a></div></section>
+      <section class="release-table-card"><div class="card-title-row"><div><span class="eyebrow">OBSERVATIONS</span><h3>Latest 25 observations</h3></div><span class="table-note">Newest first</span></div><div class="table-wrap"><table><thead><tr><th>Date</th><th id="history-value-head">Value</th><th>Change</th><th>Direction</th></tr></thead><tbody id="history-release-body"><tr><td colspan="4">Loading observations…</td></tr></tbody></table></div></section><div id="history-comparison" class="comparison-mount"></div>`;
     historyRange = "25"; historyPayload = null;
     document.querySelectorAll("[data-history-range]").forEach(button => button.addEventListener("click", () => { historyRange = button.dataset.historyRange; document.querySelectorAll("[data-history-range]").forEach(item => item.classList.toggle("active", item === button)); drawHistoryChart(); }));
-    loadCountryHistory(slug);
+    document.getElementById("history-indicator").addEventListener("change", event => { const query = new URLSearchParams(location.search); query.set("indicator",event.target.value); history.replaceState({},"",`${location.pathname}?${query}`); renderCountryHistory(row.market); });
+    loadCountryHistory(slug, requested);
+    renderComparison("history-comparison", [row.market,"United States","China"], selectedLabel === "GDP growth" ? "GDP" : selectedLabel === "Inequality" ? "Inflation" : selectedLabel);
   }
 
-  async function loadCountryHistory(slug) {
+  function macroStrength(row) {
+    const release = latestIndicator(row.market);
+    const clamp = value => Math.max(0, Math.min(100, value));
+    const real = realRateFor(row);
+    const policy = clamp(50 + (real == null ? 0 : real * 5) + (/hawk|tight|restrict|hike/i.test(row.bias) ? 10 : /ease|cut|support/i.test(row.bias) ? -8 : 0));
+    const gdp = release?.gdp?.current;
+    const pmi = [release?.man_pmi?.current,release?.serv_pmi?.current].filter(Number.isFinite);
+    const growth = clamp(50 + (Number.isFinite(gdp) ? (gdp - 2) * 7 : 0) + (pmi.length ? (pmi.reduce((a,b)=>a+b,0)/pmi.length - 50) * 2 : 0));
+    const stability = clamp(100 - row.pressure);
+    const releases = release ? clamp(50 + [[release.gdp,1],[release.man_pmi,1],[release.serv_pmi,1],[release.unemp,-1]].reduce((score,[item,direction])=>score + (Number.isFinite(item?.current)&&Number.isFinite(item?.forecast) ? Math.sign(item.current-item.forecast)*direction*8 : 0),0)) : 50;
+    return { total:Math.round(policy*.4+growth*.3+stability*.2+releases*.1), policy:Math.round(policy), growth:Math.round(growth), stability:Math.round(stability), releases:Math.round(releases) };
+  }
+
+  function renderPairPressure(id, defaultCountry) {
+    const mount = document.getElementById(id); if (!mount) return;
+    const fallback = defaultCountry === "United States" ? "United Kingdom" : "United States";
+    mount.innerHTML = `<section class="pair-pressure-card"><div class="comparison-head"><div><span class="eyebrow">RELATIVE MACRO WHEEL</span><h3>Compare two countries for a trade bias</h3><p>Positive data on one side plus weaker data on the other creates a relative macro edge. Confirm it with price, trend and your risk plan.</p></div></div><div class="pair-selectors"><label>Country A<select data-pair-a>${markets.map(row=>`<option ${row.market===defaultCountry?"selected":""}>${row.market}</option>`).join("")}</select></label><span>VERSUS</span><label>Country B<select data-pair-b>${markets.map(row=>`<option ${row.market===fallback?"selected":""}>${row.market}</option>`).join("")}</select></label></div><div class="pair-output"></div></section>`;
+    const update = () => {
+      const a = markets.find(row=>row.market===mount.querySelector("[data-pair-a]").value), b = markets.find(row=>row.market===mount.querySelector("[data-pair-b]").value);
+      const sa=macroStrength(a), sb=macroStrength(b), difference=sa.total-sb.total;
+      const leader=difference>=0?a:b, laggard=difference>=0?b:a, clear=Math.abs(difference)>=5;
+      mount.querySelector(".pair-output").innerHTML=`<div class="pair-wheels"><div><div class="pressure-dial macro-dial" style="--score:${sa.total}"><div><strong>${sa.total}</strong><span>MACRO / 100</span></div></div><b>${flags[a.market]||"🌍"} ${a.market}</b><small>Pressure ${a.pressure}/100</small></div><div class="pair-verdict"><span>${clear?"RELATIVE EDGE":"NO CLEAR EDGE"}</span><strong>${clear?`${leader.market} over ${laggard.market}`:"Wait for divergence"}</strong><p>${clear?`Watch for long ${leader.market} exposure versus short ${laggard.market} exposure only when price action confirms.`:"The scores are too close to justify a directional macro preference."}</p></div><div><div class="pressure-dial macro-dial" style="--score:${sb.total}"><div><strong>${sb.total}</strong><span>MACRO / 100</span></div></div><b>${flags[b.market]||"🌍"} ${b.market}</b><small>Pressure ${b.pressure}/100</small></div></div><div class="pair-breakdown"><span>Driver</span><b>${a.market}</b><b>${b.market}</b>${[["Policy support",sa.policy,sb.policy],["Growth",sa.growth,sb.growth],["Stability",sa.stability,sb.stability],["Release surprises",sa.releases,sb.releases]].map(values=>values.map((value,index)=>index?`<strong>${value}</strong>`:`<span>${value}</span>`).join("")).join("")}</div><p class="pair-method">Scores are transparent relative fundamentals: policy 40%, growth 30%, stability 20%, release surprises 10%. This is a research filter, not investment advice or an automatic trade entry.</p>`;
+    };
+    mount.querySelectorAll("select").forEach(select=>select.addEventListener("change",update)); update();
+  }
+
+  async function loadCountryHistory(slug, indicator = "inflation") {
     try {
-      const response = await fetch(`/api/history?country=${encodeURIComponent(slug)}`);
+      const response = await fetch(`/api/history?country=${encodeURIComponent(slug)}&indicator=${encodeURIComponent(indicator)}`);
       if (!response.ok) throw new Error("History unavailable");
       historyPayload = await response.json();
+      const formatValue = value => historyPayload.unit.includes("%") ? pct(value) : number(value,1);
+      document.getElementById("history-heading").textContent = historyPayload.indicator.toLowerCase();
+      document.getElementById("history-title").textContent = `${historyPayload.indicator} over time`;
+      document.getElementById("history-value-head").textContent = historyPayload.indicator;
       document.getElementById("history-subtitle").textContent = `${historyPayload.frequency[0].toUpperCase()}${historyPayload.frequency.slice(1)} observations · ${historyPayload.unit}`;
       document.getElementById("history-source").textContent = `Source: ${historyPayload.source}`;
       const link = document.getElementById("history-source-link"); link.href = historyPayload.sourceUrl;
       const latest = historyPayload.observations.at(-1);
-      document.getElementById("history-latest").textContent = latest ? `Latest: ${pct(latest.value)} · ${new Date(`${latest.date}T00:00:00Z`).toLocaleDateString("en-GB",{month:"short",year:"numeric"})}` : "Latest: unavailable";
+      document.getElementById("history-latest").textContent = latest ? `Latest: ${formatValue(latest.value)} · ${new Date(`${latest.date}T00:00:00Z`).toLocaleDateString("en-GB",{month:"short",year:"numeric"})}` : "Latest: unavailable";
       const recent = historyPayload.observations.slice(-25), previous = recent.at(-2);
       const high = recent.reduce((best,item) => item.value > best.value ? item : best, recent[0]);
       const low = recent.reduce((best,item) => item.value < best.value ? item : best, recent[0]);
       const dateLabel = item => new Date(`${item.date}T00:00:00Z`).toLocaleDateString("en-GB",{month:"short",year:"numeric"});
-      document.getElementById("history-stat-latest").textContent = latest ? pct(latest.value) : "—";
+      document.getElementById("history-stat-latest").textContent = latest ? formatValue(latest.value) : "—";
       document.getElementById("history-stat-date").textContent = latest ? dateLabel(latest) : "—";
-      document.getElementById("history-stat-high").textContent = pct(high.value); document.getElementById("history-stat-high-date").textContent = dateLabel(high);
-      document.getElementById("history-stat-low").textContent = pct(low.value); document.getElementById("history-stat-low-date").textContent = dateLabel(low);
+      document.getElementById("history-stat-high").textContent = formatValue(high.value); document.getElementById("history-stat-high-date").textContent = dateLabel(high);
+      document.getElementById("history-stat-low").textContent = formatValue(low.value); document.getElementById("history-stat-low-date").textContent = dateLabel(low);
       document.getElementById("history-stat-change").textContent = latest && previous ? `${latest.value-previous.value>=0?"+":""}${(latest.value-previous.value).toFixed(2)}` : "—";
-      document.getElementById("history-release-body").innerHTML = [...recent].reverse().map((item,index,array) => { const older=array[index+1]; const change=older ? item.value-older.value : null; return `<tr><td><strong>${new Date(`${item.date}T00:00:00Z`).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}</strong></td><td>${pct(item.value)}</td><td>${change==null?"—":`${change>=0?"+":""}${change.toFixed(2)} pp`}</td><td><span class="badge ${change==null||Math.abs(change)<.01?"flat":change>0?"up":"down"}">${change==null?"Baseline":change>0?"Higher":change<0?"Lower":"Unchanged"}</span></td></tr>`; }).join("");
+      document.getElementById("history-release-body").innerHTML = [...recent].reverse().map((item,index,array) => { const older=array[index+1]; const change=older ? item.value-older.value : null; return `<tr><td><strong>${new Date(`${item.date}T00:00:00Z`).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}</strong></td><td>${formatValue(item.value)}</td><td>${change==null?"—":`${change>=0?"+":""}${change.toFixed(2)} ${historyPayload.unit.includes("%")?"pp":"pts"}`}</td><td><span class="badge ${change==null||Math.abs(change)<.01?"flat":change>0?"up":"down"}">${change==null?"Baseline":change>0?"Higher":change<0?"Lower":"Unchanged"}</span></td></tr>`; }).join("");
       drawHistoryChart();
     } catch {
       document.getElementById("history-subtitle").textContent = "Historical observations are temporarily unavailable. The latest dashboard value remains above.";
@@ -193,13 +230,14 @@
     const x = index => pad.left + index * ((width-pad.left-pad.right)/Math.max(1,points.length-1));
     const y = value => pad.top + (max-value) * ((height-pad.top-pad.bottom)/(max-min));
     ctx.clearRect(0,0,width,height); ctx.font="12px Inter, system-ui, sans-serif"; ctx.textBaseline="middle"; ctx.strokeStyle="#e2e7e4"; ctx.fillStyle="#65706b"; ctx.lineWidth=1;
-    for(let i=0;i<=4;i++){ const value=max-(max-min)*i/4, py=y(value); ctx.beginPath();ctx.moveTo(pad.left,py);ctx.lineTo(width-pad.right,py);ctx.stroke();ctx.fillText(`${value.toFixed(1)}%`,6,py); }
+    const suffix=historyPayload.unit.includes("%")?"%":"";
+    for(let i=0;i<=4;i++){ const value=max-(max-min)*i/4, py=y(value); ctx.beginPath();ctx.moveTo(pad.left,py);ctx.lineTo(width-pad.right,py);ctx.stroke();ctx.fillText(`${value.toFixed(1)}${suffix}`,6,py); }
     const gradient=ctx.createLinearGradient(0,pad.top,0,height-pad.bottom);gradient.addColorStop(0,"rgba(8,122,85,.22)");gradient.addColorStop(1,"rgba(8,122,85,.015)");
     ctx.beginPath(); points.forEach((item,index)=>index?ctx.lineTo(x(index),y(item.value)):ctx.moveTo(x(index),y(item.value))); ctx.lineTo(x(points.length-1),height-pad.bottom);ctx.lineTo(x(0),height-pad.bottom);ctx.closePath();ctx.fillStyle=gradient;ctx.fill();
     ctx.beginPath();points.forEach((item,index)=>index?ctx.lineTo(x(index),y(item.value)):ctx.moveTo(x(index),y(item.value)));ctx.strokeStyle="#087a55";ctx.lineWidth=2.5;ctx.stroke();
     const labels=[0,Math.floor((points.length-1)/2),points.length-1];ctx.fillStyle="#65706b";ctx.textAlign="center";labels.forEach(index=>ctx.fillText(new Date(`${points[index].date}T00:00:00Z`).toLocaleDateString("en-GB",{month:"short",year:"2-digit"}),x(index),height-17));
     const tooltip=document.getElementById("history-tooltip");
-    const showPoint = event => { const rect=canvas.getBoundingClientRect(); const px=(event.clientX??event.touches?.[0]?.clientX)-rect.left; const index=Math.max(0,Math.min(points.length-1,Math.round((px-pad.left)/((width-pad.left-pad.right)/Math.max(1,points.length-1))))); const point=points[index]; tooltip.hidden=false;tooltip.style.left=`${Math.min(width-145,Math.max(8,x(index)-55))}px`;tooltip.style.top=`${Math.max(5,y(point.value)-62)}px`;tooltip.innerHTML=`<strong>${pct(point.value)}</strong><span>${new Date(`${point.date}T00:00:00Z`).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}</span>`; };
+    const showPoint = event => { const rect=canvas.getBoundingClientRect(); const px=(event.clientX??event.touches?.[0]?.clientX)-rect.left; const index=Math.max(0,Math.min(points.length-1,Math.round((px-pad.left)/((width-pad.left-pad.right)/Math.max(1,points.length-1))))); const point=points[index]; tooltip.hidden=false;tooltip.style.left=`${Math.min(width-145,Math.max(8,x(index)-55))}px`;tooltip.style.top=`${Math.max(5,y(point.value)-62)}px`;tooltip.innerHTML=`<strong>${number(point.value,2)}${suffix}</strong><span>${new Date(`${point.date}T00:00:00Z`).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}</span>`; };
     canvas.onpointermove=showPoint; canvas.onpointerleave=()=>{tooltip.hidden=true}; canvas.onclick=showPoint;
   }
 
