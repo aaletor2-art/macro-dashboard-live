@@ -2,7 +2,7 @@
   "date": "2026-08-07",
   "filename": "macro_daily_export_2026-08-07.xlsx",
   "href": "/daily_exports/macro_daily_export_2026-08-07.xlsx",
-  "generatedAt": "2026-08-07T16:09:35.218Z",
+  "generatedAt": "2026-08-07T17:03:19.500Z",
   "assets": [
     {
       "date": "2026-08-07",
@@ -10,9 +10,9 @@
       "symbol": "AUDUSD=X",
       "convention": "USD per 1 AUD",
       "open": 0.7030865550041199,
-      "close": 0.7069635987281799,
-      "move": 0.0038770437240600586,
-      "pctMove": 0.005514319249124711
+      "close": 0.706813633441925,
+      "move": 0.0037270784378051758,
+      "pctMove": 0.005301023624016521
     },
     {
       "date": "2026-08-07",
@@ -20,9 +20,9 @@
       "symbol": "CAD=X",
       "convention": "USD per 1 CAD",
       "open": 0.7136485256714067,
-      "close": 0.7177978108069001,
-      "move": 0.004149285135493397,
-      "pctMove": 0.005814185815895545
+      "close": 0.7176844462068703,
+      "move": 0.004035920535463644,
+      "pctMove": 0.005655333669563278
     },
     {
       "date": "2026-08-07",
@@ -30,9 +30,9 @@
       "symbol": "CHF=X",
       "convention": "USD per 1 CHF",
       "open": 1.2312541817666498,
-      "close": 1.2384360666442313,
-      "move": 0.007181884877581535,
-      "pctMove": 0.0058329831353560735
+      "close": 1.2383287523066593,
+      "move": 0.007074570540009484,
+      "pctMove": 0.005745824578527348
     },
     {
       "date": "2026-08-07",
@@ -40,9 +40,9 @@
       "symbol": "EURUSD=X",
       "convention": "USD per 1 EUR",
       "open": 1.152339220046997,
-      "close": 1.1566041707992554,
-      "move": 0.004264950752258301,
-      "pctMove": 0.0037011243547575567
+      "close": 1.156336784362793,
+      "move": 0.0039975643157958984,
+      "pctMove": 0.0034690863994308874
     },
     {
       "date": "2026-08-07",
@@ -50,9 +50,9 @@
       "symbol": "GBPUSD=X",
       "convention": "USD per 1 GBP",
       "open": 1.3447909355163574,
-      "close": 1.349892020225525,
-      "move": 0.0051010847091674805,
-      "pctMove": 0.003793217647774183
+      "close": 1.3497462272644043,
+      "move": 0.004955291748046875,
+      "pctMove": 0.0036848045426065568
     },
     {
       "date": "2026-08-07",
@@ -60,9 +60,9 @@
       "symbol": "JPY=X",
       "convention": "USD per 1 JPY",
       "open": 0.006311059665976844,
-      "close": 0.006348884043352524,
-      "move": 0.000037824377375679855,
-      "pctMove": 0.005993348086945183
+      "close": 0.006351787205824229,
+      "move": 0.000040727539847385495,
+      "pctMove": 0.006453359974862627
     },
     {
       "date": "2026-08-07",
@@ -70,9 +70,9 @@
       "symbol": "NZDUSD=X",
       "convention": "USD per 1 NZD",
       "open": 0.5866134762763977,
-      "close": 0.5895531177520752,
-      "move": 0.0029396414756774902,
-      "pctMove": 0.0050112068586238845
+      "close": 0.5893446803092957,
+      "move": 0.0027312040328979492,
+      "pctMove": 0.004655883547433293
     },
     {
       "date": "2026-08-07",
@@ -80,9 +80,9 @@
       "symbol": "DX-Y.NYB",
       "convention": "Index points",
       "open": 99.94300079345703,
-      "close": 99.56600189208984,
-      "move": -0.3769989013671875,
-      "pctMove": -0.003772139103030314
+      "close": 99.54199981689453,
+      "move": -0.4010009765625,
+      "pctMove": -0.004012296742932575
     },
     {
       "date": "2026-08-07",
@@ -90,9 +90,9 @@
       "symbol": "GC=F",
       "convention": "USD futures price",
       "open": 4298.2998046875,
-      "close": 4400.39990234375,
-      "move": 102.10009765625,
-      "pctMove": 0.023753600794645502
+      "close": 4393.7998046875,
+      "move": 95.5,
+      "pctMove": 0.022218087229711747
     },
     {
       "date": "2026-08-07",
@@ -100,9 +100,9 @@
       "symbol": "SI=F",
       "convention": "USD futures price",
       "open": 61.85499954223633,
-      "close": 63.54999923706055,
-      "move": 1.6949996948242188,
-      "pctMove": 0.027402792132700915
+      "close": 63.380001068115234,
+      "move": 1.5250015258789062,
+      "pctMove": 0.02465445860746618
     },
     {
       "date": "2026-08-07",
@@ -110,19 +110,19 @@
       "symbol": "CL=F",
       "convention": "USD futures price",
       "open": 78.16999816894531,
-      "close": 78.43000030517578,
-      "move": 0.26000213623046875,
-      "pctMove": 0.0033261115814349207
+      "close": 78.22000122070312,
+      "move": 0.0500030517578125,
+      "pctMove": 0.0006396706272109309
     },
     {
       "date": "2026-08-07",
       "asset": "Brent Crude",
       "symbol": "BZ=F",
       "convention": "USD futures price",
-      "open": 83.33000183105469,
-      "close": 83.75,
-      "move": 0.4199981689453125,
-      "pctMove": 0.005040179523778665
+      "open": 0,
+      "close": 83.52999877929688,
+      "move": 83.52999877929688,
+      "pctMove": null
     },
     {
       "date": "2026-08-07",
@@ -130,9 +130,9 @@
       "symbol": "NG=F",
       "convention": "USD futures price",
       "open": 2.632999897003174,
-      "close": 2.6640000343322754,
-      "move": 0.031000137329101562,
-      "pctMove": 0.011773694850647498
+      "close": 2.6700000762939453,
+      "move": 0.037000179290771484,
+      "pctMove": 0.014052480341106177
     },
     {
       "date": "2026-08-07",
@@ -140,9 +140,9 @@
       "symbol": "HG=F",
       "convention": "USD futures price",
       "open": 6.7204999923706055,
-      "close": 6.604000091552734,
-      "move": -0.1164999008178711,
-      "pctMove": -0.017335004977327095
+      "close": 6.5879998207092285,
+      "move": -0.13250017166137695,
+      "pctMove": -0.01971582052106191
     },
     {
       "date": "2026-08-07",
@@ -150,9 +150,9 @@
       "symbol": "ZC=F",
       "convention": "USD futures price",
       "open": 461.75,
-      "close": 465.75,
-      "move": 4,
-      "pctMove": 0.008662696264212233
+      "close": 464.25,
+      "move": 2.5,
+      "pctMove": 0.00541418516513259
     },
     {
       "date": "2026-08-07",
@@ -160,9 +160,9 @@
       "symbol": "ZW=F",
       "convention": "USD futures price",
       "open": 631,
-      "close": 645,
-      "move": 14,
-      "pctMove": 0.022187004754358197
+      "close": 641.5,
+      "move": 10.5,
+      "pctMove": 0.016640253565768592
     },
     {
       "date": "2026-08-07",
@@ -170,9 +170,9 @@
       "symbol": "ZS=F",
       "convention": "USD futures price",
       "open": 1177.75,
-      "close": 1180.5,
-      "move": 2.75,
-      "pctMove": 0.002334960730205893
+      "close": 1177.75,
+      "move": 0,
+      "pctMove": 0
     },
     {
       "date": "2026-08-07",
@@ -180,9 +180,9 @@
       "symbol": "KC=F",
       "convention": "USD futures price",
       "open": 305.8500061035156,
-      "close": 318.70001220703125,
-      "move": 12.850006103515625,
-      "pctMove": 0.0420140782968188
+      "close": 315.6000061035156,
+      "move": 9.75,
+      "pctMove": 0.03187837111469638
     },
     {
       "date": "2026-08-07",
@@ -190,9 +190,9 @@
       "symbol": "CC=F",
       "convention": "USD futures price",
       "open": 5874,
-      "close": 5889,
-      "move": 15,
-      "pctMove": 0.0025536261491316825
+      "close": 5855,
+      "move": -19,
+      "pctMove": -0.00323459312223362
     }
   ],
   "calendarLines": [
@@ -254,6 +254,12 @@
     },
     {
       "source": "Reuters",
+      "title": "India's central bank holds rates, awaits clearer inflation signal before acting",
+      "url": "https://news.google.com/rss/articles/CBMixAFBVV95cUxQaVh6a1FVeVF5VXFBMU5FU0ctdXFZWUZudWdoR1RSd2tGaTJENGNFcWkzQlFweDduUUpBTHVNWVJRdmlXZFlvUG1OYV9MaUtndEN3akxJWWZ4Ny1Jazl0M2p4VGdWNkNHNXZTcTdSTXQycVcxVGdNZmhHMUEyeUx1SE9LTjdUekg3MW9LcENxaEJoYS1vSXFDbDA0cmprREl2OTgzQkxMd0NYel9xdlpOS3I2WjhBQVBxVGJoOVZhVFBLc0My?oc=5",
+      "publishedAt": "2026-08-05T08:33:44.000Z"
+    },
+    {
+      "source": "Reuters",
       "title": "Japan's economy minister offers sanguine view on inflation",
       "url": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxOeGdFdlZRcGJ3bllUd0hBZ2w3eVkxeDVLRFdsUmVVNjkyWG9PMFQ1ZVZiS2hfQTVsR3RlcEw0YmVuV09jNlVNQW9HMUZxaFJFWXR3b1hGTkhKRVI4UDVEMXMyOWhUbGtnUG9oQTFnNmFFRzZTUmpOOUpPWXpYNTFEUS1oQjZTTjdVYm4xRU1sSjdNei1PcGFiZXMzRlgwYy01eHdrWkp2TEZKTlR5LVRiS1FpYmlRaHVu?oc=5",
       "publishedAt": "2026-08-04T04:12:27.000Z"
@@ -263,12 +269,6 @@
       "title": "Brazil central bank to cut rates for fourth straight meeting on August 5: Reuters poll",
       "url": "https://news.google.com/rss/articles/CBMiswFBVV95cUxQdlp0RHdBSUh1R3JjMUx4MnFmOUR5VmlxLXBhUll0XzZSTk9kMnlPSE5SV0xDVDd0ZHdRWmNBakltZFVuaUJMcVlWc2NYWEYya1hHMkk1OTRJeDBFSUtkTnZIUFpMbmxwM3hlblZtN1QtM0dFbE8wcHpvTzhHdHFKZ0EwZ3hlWXNFRGVqN001Y3ZZUFV0Z1BXNlhfa1k2WjMzaHlxUzhRWFBRejVHY2h0SE5jaw?oc=5",
       "publishedAt": "2026-08-03T21:46:42.000Z"
-    },
-    {
-      "source": "Reuters",
-      "title": "Warsh-led Fed leaves rates on hold and a bond market scratching its head",
-      "url": "https://news.google.com/rss/articles/CBMiugFBVV95cUxPMWE0UWlwemdYNE5CaEZPSVBqZVNuSmlVSmIxWHV6R1hXa3lua1RReGpYaTEtZGttNzZoTU1XT3VGbjZWUmxFSWxnN21mMGlHVW1fazREOXdRZVk1ek9ya1JVMVNWM0NoVEVzRHY2bWJSYy1JRUtrNElLb3BPSjJzNm9wWmpmYTU3OXRIQ0E1dG82TkU2emF4QVoxTEJJU01ydzF5cHZHRVlnbGp6T3JESUtzV0ZZYjZUc2c?oc=5",
-      "publishedAt": "2026-07-30T04:23:15.000Z"
     },
     {
       "source": "Trading Economics",
