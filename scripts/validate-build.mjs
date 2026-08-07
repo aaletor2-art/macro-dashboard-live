@@ -5,11 +5,17 @@ const required = [
   "public/enhancements.css",
   "public/app-enhancements.js",
   "api/live.js",
+  "api/history.js",
   "public/data/latest-export.json"
 ];
 
 for (const file of required) {
   await fs.access(file);
+}
+
+const enhancements = await fs.readFile("public/app-enhancements.js", "utf8");
+for (const requiredText of ["history-chart", "Last 25 releases", "Last 5 years", "/api/history"]) {
+  if (!enhancements.includes(requiredText)) throw new Error(`Historical charts are missing ${requiredText}`);
 }
 
 const snapshot = JSON.parse(await fs.readFile("public/data/latest-export.json", "utf8"));
