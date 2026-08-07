@@ -43,7 +43,10 @@ const calendarLines = [
 
 async function fetchYahooDaily(symbol, invert) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5d&interval=1d`;
-  const response = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+  const response = await fetch(url, {
+    headers: { "User-Agent": "Mozilla/5.0" },
+    signal: AbortSignal.timeout(12000)
+  });
   if (!response.ok) throw new Error(`${symbol}: HTTP ${response.status}`);
   const payload = await response.json();
   const result = payload.chart?.result?.[0];
@@ -89,11 +92,18 @@ async function main() {
   await fs.mkdir(exportDir, { recursive: true });
   await fs.mkdir(dataDir, { recursive: true });
 
-  const rows = [];
-  for (const [asset, symbol, convention, invert] of assets) {
+  let previousAssets = [];
+  try {
+    const previous = JSON.parse(await fs.readFile(path.join(dataDir, "latest-export.json"), "utf8"));
+    previousAssets = Array.isArray(previous.assets) ? previous.assets : [];
+  } catch {
+    // A first run has no previous hosted snapshot to fall back to.
+  }
+
+  const rows = await Promise.all(assets.map(async ([asset, symbol, convention, invert]) => {
     try {
       const quote = await fetchYahooDaily(symbol, invert);
-      rows.push({
+      return {
         date: quote.date,
         asset,
         symbol,
@@ -102,11 +112,15 @@ async function main() {
         close: quote.close,
         move: quote.close - quote.open,
         pctMove: quote.open ? quote.close / quote.open - 1 : null
-      });
+      };
     } catch (error) {
-      rows.push({ date: today, asset, symbol, convention, open: null, close: null, move: null, pctMove: null, error: String(error.message || error) });
+      const previous = previousAssets.find(row => row.symbol === symbol);
+      if (previous?.open != null && previous?.close != null) {
+        return { ...previous, asset, symbol, convention, stale: true, error: String(error.message || error) };
+      }
+      return { date: today, asset, symbol, convention, open: null, close: null, move: null, pctMove: null, stale: true, error: String(error.message || error) };
     }
-  }
+  }));
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "Macro Dashboard";
