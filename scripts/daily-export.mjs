@@ -41,6 +41,42 @@ const calendarLines = [
   ["CAD", "Manufacturing PMI", "Previous 50.0; Last 53.3; Forecast 50.1", "Manufacturing improved versus previous reading."]
 ];
 
+const newsFeeds = [
+  ["Reuters", "global economy inflation central bank markets site:reuters.com"],
+  ["Trading Economics", "inflation interest rates GDP site:tradingeconomics.com"]
+];
+
+function decodeXml(value = "") {
+  return value
+    .replace(/^<!\[CDATA\[|\]\]>$/g, "")
+    .replaceAll("&amp;", "&")
+    .replaceAll("&quot;", "\"")
+    .replaceAll("&#39;", "'")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">");
+}
+
+function xmlTag(block, tag) {
+  return decodeXml(block.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, "i"))?.[1] || "").trim();
+}
+
+async function fetchNews(source, query) {
+  const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-GB&gl=GB&ceid=GB:en`;
+  const response = await fetch(url, { signal: AbortSignal.timeout(12000) });
+  if (!response.ok) throw new Error(`${source} news: HTTP ${response.status}`);
+  const xml = await response.text();
+  return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)].slice(0, 4).map(match => {
+    const block = match[1];
+    const rawTitle = xmlTag(block, "title");
+    return {
+      source,
+      title: rawTitle.replace(new RegExp(`\\s+-\\s+${source}$`, "i"), ""),
+      url: xmlTag(block, "link"),
+      publishedAt: new Date(xmlTag(block, "pubDate")).toISOString()
+    };
+  });
+}
+
 async function fetchYahooDaily(symbol, invert) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5d&interval=1d`;
   const response = await fetch(url, {
@@ -122,6 +158,15 @@ async function main() {
     }
   }));
 
+  const news = (await Promise.all(newsFeeds.map(async ([source, query]) => {
+    try {
+      return await fetchNews(source, query);
+    } catch (error) {
+      console.warn(String(error.message || error));
+      return [];
+    }
+  }))).flat().sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "Macro Dashboard";
   workbook.created = new Date();
@@ -170,7 +215,8 @@ async function main() {
     href: `/daily_exports/${filename}`,
     generatedAt: new Date().toISOString(),
     assets: rows.map(({ error, ...row }) => row),
-    calendarLines
+    calendarLines,
+    news
   }, null, 2));
 
   console.log(`Wrote ${filePath}`);
