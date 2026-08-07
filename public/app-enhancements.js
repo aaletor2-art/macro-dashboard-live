@@ -20,6 +20,8 @@
   };
   let hosted = { assets: [], news: [], generatedAt: null, date: null };
   let live = { companies: [], markets: [], generatedAt: null };
+  let companyUniverse = [];
+  let companyQuotes = [];
   let companySector = "All";
   let historyRange = "25";
   let historyPayload = null;
@@ -44,9 +46,10 @@
     let value = null;
     const historyView = parts[0] === "countries" && parts[1] && parts[2] === "history";
     if (parts[0] === "countries" && parts[1]) { pageName = "country"; value = parts[1]; }
+    else if (parts[0] === "companies" && parts[1]) { pageName = "company"; value = parts[1]; }
     else if (["markets","calendar","companies","trading-plan"].includes(parts[0])) pageName = parts[0];
     document.querySelectorAll(".page").forEach(page => page.classList.toggle("active", page.dataset.page === pageName));
-    document.querySelectorAll(".site-nav a").forEach(link => link.classList.toggle("active", link.dataset.route === (pageName === "country" ? "countries" : pageName)));
+    document.querySelectorAll(".site-nav a").forEach(link => link.classList.toggle("active", link.dataset.route === (pageName === "country" ? "countries" : pageName === "company" ? "companies" : pageName)));
     if (pageName === "country") {
       const name = Object.entries(countryCodes).find(([,slug]) => slug === decodeURIComponent(value || ""))?.[0] || "United Kingdom";
       historyView ? renderCountryHistory(name) : renderCountry(name);
@@ -54,6 +57,7 @@
     if (pageName === "markets") renderMarkets();
     if (pageName === "calendar") renderFullCalendar();
     if (pageName === "companies") renderCompanies();
+    if (pageName === "company") renderCompany(value);
     if (pageName === "trading-plan") renderTradingPlan();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -131,7 +135,7 @@
         </div></div>
         <div class="insight-card"><div class="card-title-row"><h3>Latest mapped releases</h3><a href="/countries/${teSlug}/history">Historical data →</a></div>${releaseRows(row.market)}<a class="data-deep-link" href="/countries/${teSlug}/history"><span>INFLATION HISTORY</span><strong>25 releases · 5-year chart · release table</strong><small>Open the full historical dataset →</small></a></div>
         <div class="insight-card"><h3>Decision checklist</h3><div class="note-list" style="padding:0"><div class="note red"><strong>Primary risk</strong><span>${row.watch}</span></div><div class="note amber"><strong>Policy signal</strong><span>${row.bias}</span></div><div class="note green"><strong>What changes the view</strong><span>A material inflation surprise, a central-bank communication shift, or a sharp currency move.</span></div></div></div>
-      </div><div id="country-comparison" class="comparison-mount"></div>`;
+      </div><section class="country-companies"><div class="card-title-row"><div><span class="eyebrow">COUNTRY BELLWETHERS</span><h3>Five companies carrying the macro signal</h3></div><a href="/companies?country=${encodeURIComponent(row.market)}">Open company hub →</a></div><div class="country-company-strip">${companyUniverse.filter(company=>company.country===row.market).slice(0,5).map(company=>`<a href="/companies/${company.id}"><img src="https://www.google.com/s2/favicons?domain=${company.domain}&sz=64" alt=""><span><strong>${company.name}</strong><small>${company.sector}${company.symbol?` · ${company.symbol}`:" · price feed not available"}</small></span></a>`).join("") || `<div class="empty-state">Loading country companies…</div>`}</div></section><div id="country-comparison" class="comparison-mount"></div>`;
     renderComparison("country-comparison", [row.market,"United States","China"]);
   }
 
@@ -272,14 +276,24 @@
 
   function renderCompanies() {
     const root = document.getElementById("company-grid");
-    const rows = (live.companies || []).filter(row => companySector === "All" || row.sector === companySector);
-    if (!rows.length) { root.innerHTML = `<div class="empty-state">Connecting to the live company feed…</div>`; return; }
+    const countryFilter=document.getElementById("company-country-filter");
+    if(!countryFilter.dataset.bound&&companyUniverse.length){const requested=new URLSearchParams(location.search).get("country")||"United Kingdom";countryFilter.innerHTML=[...new Set(companyUniverse.map(x=>x.country))].map(country=>`<option ${country===requested?"selected":""}>${flags[country]||"🌍"} ${country}</option>`).join("");countryFilter.addEventListener("change",loadCompanyCountry);countryFilter.dataset.bound="true";loadCompanyCountry();}
+    const rows = companyQuotes.filter(row => companySector === "All" || row.sector === companySector);
+    if (!rows.length) { root.innerHTML = `<div class="empty-state">Select a country to load its five company bellwethers.</div>`; return; }
     root.innerHTML = rows.map(row => {
       const unavailable = row.unavailable || row.price == null;
       const direction = unavailable || Math.abs(row.changePct || 0) < .01 ? "flat" : row.changePct > 0 ? "up" : "down";
-      return `<article class="company-card"><div class="company-card-head"><div class="company-avatar">${row.name.split(/\s+/).map(word => word[0]).slice(0,2).join("")}</div><div><span>${row.sector}</span><h3>${row.name}</h3><small>${flags[row.country] || "🌍"} ${row.country} · ${row.symbol}</small></div></div><div class="company-quote"><strong>${unavailable ? "Unavailable" : `${row.currency || ""} ${number(row.price,2)}`}</strong><span class="badge ${direction}">${unavailable ? "Retry later" : `${row.changePct >= 0 ? "+" : ""}${number(row.changePct)}%`}</span></div><div class="move-line"><span>${row.exchange || "Exchange feed"}</span><span>${row.marketTime ? new Date(row.marketTime).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}) : "Latest"}</span></div></article>`;
+      return `<a class="company-card" href="/companies/${row.id}"><div class="company-card-head"><img class="company-logo" src="https://www.google.com/s2/favicons?domain=${row.domain}&sz=128" alt="${row.name} logo"><div><span>${row.sector}</span><h3>${row.name}</h3><small>${flags[row.country] || "🌍"} ${row.country} · ${row.symbol||"Private/local feed"}</small></div></div><div class="company-quote"><strong>${unavailable ? "Price unavailable" : `${row.currency || ""} ${number(row.price,2)}`}</strong><span class="badge ${direction}">${unavailable ? "Profile available" : `${row.changePct >= 0 ? "+" : ""}${number(row.changePct)}%`}</span></div><div class="move-line"><span>${row.exchange || row.reason || "Company profile"}</span><span>Open analysis →</span></div></a>`;
     }).join("");
   }
+
+  async function loadCompanyCountry(){const select=document.getElementById("company-country-filter");if(!select)return;document.getElementById("company-grid").innerHTML=`<div class="empty-state">Loading five company prices…</div>`;try{const response=await fetch(`/api/companies?country=${encodeURIComponent(select.value)}&ts=${Date.now()}`);const data=await response.json();companyQuotes=data.peers||[];document.getElementById("company-refresh").textContent=`Updated ${new Date(data.generatedAt).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}`;}catch{companyQuotes=companyUniverse.filter(x=>x.country===select.value).slice(0,5).map(x=>({...x,unavailable:true}));}renderCompanies();}
+
+  async function renderCompany(id){const root=document.getElementById("company-profile");if(!root)return;root.innerHTML=`<div class="empty-state">Loading company price and macro context…</div>`;try{const response=await fetch(`/api/companies?id=${encodeURIComponent(id)}&ts=${Date.now()}`);const data=await response.json(),company=data.company,peers=data.peers||[];if(!company)throw new Error("Company not found");const quote=peers.find(x=>x.id===company.id)||company,country=markets.find(x=>x.market===company.country),available=!quote.unavailable&&quote.price!=null;const monthStart=quote.chart?.[0]?.value,monthMove=available&&monthStart?(quote.price/monthStart-1)*100:null;root.innerHTML=`<a class="back-link" href="/companies?country=${encodeURIComponent(company.country)}">← ${company.country} company hub</a><div class="company-profile-head"><img src="https://www.google.com/s2/favicons?domain=${company.domain}&sz=256" alt="${company.name} logo"><div><span class="eyebrow">${company.sector.toUpperCase()} · ${company.country.toUpperCase()}</span><h2>${company.name}</h2><p>${company.symbol||"Local/private market feed"} · Ranked macro bellwether ${company.rank}/5 for this dashboard</p></div><div class="company-live-price"><span>LIVE / LATEST PRICE</span><strong>${available?`${quote.currency||""} ${number(quote.price,2)}`:"Unavailable"}</strong><small>${available?`${quote.changePct>=0?"+":""}${number(quote.changePct)}% today · ${new Date(quote.marketTime||data.generatedAt).toLocaleString("en-GB",{dateStyle:"medium",timeStyle:"short"})}`:quote.reason||"No stable free exchange feed"}</small></div></div><div class="company-data-grid"><section><span>30-DAY MOVE</span><strong>${pct(monthMove)}</strong><small>Price momentum, not a forecast</small></section><section><span>COUNTRY INFLATION</span><strong>${pct(country?.inflation)}</strong><small>Consumer-price environment</small></section><section><span>POLICY RATE</span><strong>${pct(country?.rate)}</strong><small>Financing and valuation pressure</small></section><section><span>MACRO PRESSURE</span><strong>${country?.pressure??"n/a"}/100</strong><small>${country?.temp||"Unmapped"} regime</small></section></div><div class="company-analysis-grid"><section class="insight-card"><h3>Fundamental and macro read-through</h3><p class="plain-language">${company.name} is a ${company.sector.toLowerCase()} bellwether. ${country?interpretation(country):"Country context is still loading."} For a beginner trader, compare its price direction with peers before deciding whether the move is company-specific or part of a wider ${company.country} trend.</p><div class="note-list" style="padding:0"><div class="note amber"><strong>Company exposure</strong><span>${sectorExplanation(company.sector,country)}</span></div><div class="note green"><strong>What confirms the signal</strong><span>Peer performance, earnings guidance, margins, currency moves and the next economic release.</span></div></div></section><aside class="insight-card"><h3>Need to know</h3><div class="release-list"><div class="release-row"><div><strong>Price</strong><small>What the market currently pays</small></div><span>${available?number(quote.price,2):"n/a"}</span></div><div class="release-row"><div><strong>Daily move</strong><small>Short-term sentiment</small></div><span>${pct(quote.changePct)}</span></div><div class="release-row"><div><strong>Country pressure</strong><small>Macro environment, not company quality</small></div><span>${country?.pressure??"n/a"}</span></div></div></aside></div><section class="peer-chart-card"><div class="card-title-row"><div><span class="eyebrow">PRICE COMPARISON</span><h3>${company.country} top-five peers · 30 days</h3></div><small>Indexed to 100</small></div><canvas id="peer-price-chart" width="1100" height="420" aria-label="Peer price comparison chart"></canvas><div class="peer-links">${peers.map(peer=>`<a href="/companies/${peer.id}"><img src="https://www.google.com/s2/favicons?domain=${peer.domain}&sz=32" alt="">${peer.name}</a>`).join("")}</div></section>`;drawPeerChart(peers);}catch{root.innerHTML=`<div class="empty-state">This company profile could not load. <a href="/companies">Return to companies</a>.</div>`;}}
+
+  function sectorExplanation(sector,country){const rate=country?.rate; if(/bank|financial/i.test(sector))return `Banks are sensitive to interest margins, credit losses and loan growth. The listed policy rate is ${pct(rate)}.`;if(/energy|mining/i.test(sector))return "Revenue is strongly influenced by global commodity prices, exchange rates and capital spending.";if(/consumer|automotive/i.test(sector))return "Household income, inflation and borrowing costs affect demand and margins.";if(/technology|semiconductor/i.test(sector))return "Watch global demand, export controls, currency translation and valuation sensitivity to interest rates.";return "Watch domestic growth, input costs, financing conditions and currency exposure.";}
+
+  function drawPeerChart(peers){const canvas=document.getElementById("peer-price-chart");if(!canvas)return;const ctx=canvas.getContext("2d"),ratio=window.devicePixelRatio||1,width=canvas.clientWidth||900,height=canvas.clientHeight||340;canvas.width=width*ratio;canvas.height=height*ratio;ctx.scale(ratio,ratio);ctx.clearRect(0,0,width,height);const usable=peers.filter(x=>x.chart?.length>1);if(!usable.length){ctx.fillStyle="#66706b";ctx.font="14px sans-serif";ctx.fillText("No comparable free price series are currently available.",24,40);return;}const colours=["#087a55","#375a7f","#d17b27","#8b5fbf","#c13b4a"],series=usable.map(x=>({...x,values:x.chart.map(p=>({date:p.date,value:p.value/x.chart[0].value*100}))})),values=series.flatMap(x=>x.values.map(p=>p.value)),min=Math.min(...values)-2,max=Math.max(...values)+2,pad={left:45,right:20,top:25,bottom:35},x=(i,n)=>pad.left+i*(width-pad.left-pad.right)/Math.max(1,n-1),y=v=>pad.top+(max-v)*(height-pad.top-pad.bottom)/(max-min);ctx.strokeStyle="#e1e6e3";[0,.25,.5,.75,1].forEach(step=>{const py=pad.top+step*(height-pad.top-pad.bottom);ctx.beginPath();ctx.moveTo(pad.left,py);ctx.lineTo(width-pad.right,py);ctx.stroke()});series.forEach((row,index)=>{ctx.strokeStyle=colours[index];ctx.lineWidth=2;ctx.beginPath();row.values.forEach((p,i)=>i?ctx.lineTo(x(i,row.values.length),y(p.value)):ctx.moveTo(x(i,row.values.length),y(p.value)));ctx.stroke();ctx.fillStyle=colours[index];ctx.fillText(row.name,pad.left+index*145,15)});}
 
   const planIndicators = [
     ["support-resistance","Support / resistance",3], ["trend","Trend",3], ["trendline","Trendline",1], ["channel","Channel",1], ["fib-50","Fibonacci 50%",1], ["fib-618","Fibonacci 61.8%",1], ["macd-obos","MACD overbought / oversold",1], ["macd-divergence","MACD divergence",2], ["macd-crossover","MACD crossover",1], ["bollinger-rejection","Bollinger Band rejection",1], ["stochastic-confirmation","Stochastic confirmation",1], ["round-number","Round-number support / resistance",2]
@@ -371,6 +385,7 @@
   }
 
   async function hydrate() {
+    try { const universeResponse=await fetch(`/api/companies?mode=universe&ts=${Date.now()}`,{cache:"no-store"}); if(universeResponse.ok) companyUniverse=(await universeResponse.json()).universe||[]; } catch {}
     try {
       const response = await fetch(`/data/latest-export.json?ui=${Date.now()}`, { cache:"no-store" });
       hosted = await response.json();

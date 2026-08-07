@@ -564,11 +564,15 @@
     <section id="companies-page" class="page" data-page="companies">
       <div class="page-hero compact">
         <div><span class="eyebrow">MACRO-SENSITIVE COMPANIES</span><h2>Companies transmitting the macro signal</h2><p>Live or near-live quotes for major banks, energy, mining, technology and industrial bellwethers. Prices refresh from the live endpoint, with the latest hosted reading shown if an upstream feed is unavailable.</p></div>
-        <span class="source-chip" id="company-refresh">Connecting live feed…</span>
+        <label class="country-picker">Country<select id="company-country-filter"><option>United Kingdom</option></select><small id="company-refresh">Connecting live feed…</small></label>
       </div>
       <div class="company-filter-row"><button class="company-filter active" data-sector="All">All</button><button class="company-filter" data-sector="Banks">Banks</button><button class="company-filter" data-sector="Energy">Energy</button><button class="company-filter" data-sector="Mining">Mining</button><button class="company-filter" data-sector="Technology">Technology</button><button class="company-filter" data-sector="Industrials">Industrials</button></div>
       <div id="company-grid" class="company-grid"></div>
       <div class="news-disclaimer">Quotes are indicative and may be delayed. They are provided for macro monitoring, not execution or investment advice.</div>
+    </section>
+
+    <section id="company-page" class="page" data-page="company" aria-live="polite">
+      <div id="company-profile"><div class="empty-state">Loading company data…</div></div>
     </section>
 
     <section id="trading-plan-page" class="page" data-page="trading-plan">
