@@ -7,10 +7,12 @@ This folder is connected to GitHub and deploys automatically on Vercel.
 ## What It Does
 
 - Hosts the web dashboard from `public/index.html`.
+- Provides linked Overview, Countries, Markets, and Updates views while preserving a lightweight static deployment.
 - Runs a daily GitHub Action at close of business UK time during BST.
 - Creates an Excel workbook in `public/daily_exports/`.
 - Updates `public/data/latest-export.json` with the latest export link and asset rows.
 - Keeps the previous valid quote when an upstream market request times out, and marks it stale in the data file.
+- Adds current Reuters and Trading Economics headline links through Google News RSS, with source attribution and no copied article bodies.
 - Does **not** use Reuters. Reuters can be added later through an API/export route.
 
 ## Deployment
