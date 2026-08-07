@@ -277,7 +277,7 @@
   function renderCompanies() {
     const root = document.getElementById("company-grid");
     const countryFilter=document.getElementById("company-country-filter");
-    if(!countryFilter.dataset.bound&&companyUniverse.length){const requested=new URLSearchParams(location.search).get("country")||"United Kingdom";countryFilter.innerHTML=[...new Set(companyUniverse.map(x=>x.country))].map(country=>`<option ${country===requested?"selected":""}>${flags[country]||"🌍"} ${country}</option>`).join("");countryFilter.addEventListener("change",loadCompanyCountry);countryFilter.dataset.bound="true";loadCompanyCountry();}
+    if(!countryFilter.dataset.bound&&companyUniverse.length){const requested=new URLSearchParams(location.search).get("country")||"United Kingdom";countryFilter.innerHTML=[...new Set(companyUniverse.map(x=>x.country))].map(country=>`<option value="${country}" ${country===requested?"selected":""}>${flags[country]||"🌍"} ${country}</option>`).join("");countryFilter.addEventListener("change",loadCompanyCountry);countryFilter.dataset.bound="true";loadCompanyCountry();}
     const rows = companyQuotes.filter(row => companySector === "All" || row.sector === companySector);
     if (!rows.length) { root.innerHTML = `<div class="empty-state">Select a country to load its five company bellwethers.</div>`; return; }
     root.innerHTML = rows.map(row => {
