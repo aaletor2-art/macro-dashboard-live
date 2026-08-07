@@ -324,10 +324,10 @@
       </div>
     </div>
     <nav class="site-nav" aria-label="Dashboard sections">
-      <a href="#overview" data-route="overview">Overview</a>
-      <a href="#countries" data-route="countries">Countries</a>
-      <a href="#markets" data-route="markets">Markets</a>
-      <a href="#updates" data-route="updates">Updates &amp; news</a>
+      <a href="/" data-route="countries">Countries</a>
+      <a href="/markets" data-route="markets">Markets</a>
+      <a href="/calendar" data-route="calendar">Economic calendar</a>
+      <a href="/companies" data-route="companies">Companies</a>
     </nav>
   </header>
 
@@ -533,10 +533,12 @@
         <label class="country-picker">Jump to a country<select id="country-select"><option value="">Choose country…</option></select></label>
       </div>
       <div id="country-grid" class="country-grid"></div>
+      <div class="landing-news-head"><div><span class="eyebrow">LATEST CONTEXT</span><h2>News affecting the macro view</h2></div><span class="source-chip" id="landing-news-refresh">Latest refresh</span></div>
+      <div id="landing-news-grid" class="news-grid"></div>
     </section>
 
     <section id="country-page" class="page" data-page="country" aria-live="polite">
-      <a class="back-link" href="#countries">← All countries</a>
+      <a class="back-link" href="/">← All countries</a>
       <div id="country-profile"></div>
     </section>
 
@@ -546,6 +548,25 @@
         <span class="source-chip">Yahoo Finance chart feed</span>
       </div>
       <div id="market-cards" class="market-cards"></div>
+    </section>
+
+    <section id="calendar-page" class="page" data-page="calendar">
+      <div class="page-hero compact">
+        <div><span class="eyebrow">ECONOMIC CALENDAR</span><h2>All mapped releases in one place</h2><p>Previous, current, forecast and change for every release carried in the source workbook, plus the latest short calendar lines.</p></div>
+        <label class="country-picker">Filter currency<select id="calendar-filter"><option value="All">All currencies</option></select></label>
+      </div>
+      <div id="calendar-summary" class="calendar-summary"></div>
+      <div class="panel calendar-panel"><div class="panel-head"><div><h2>Full release matrix</h2><div class="mini-kicker">Click a country name to open its complete profile.</div></div></div><div class="table-wrap"><table><thead><tr><th>Currency</th><th>Country</th><th>Indicator</th><th>Previous</th><th>Current</th><th>Forecast</th><th>Change</th></tr></thead><tbody id="full-calendar-body"></tbody></table></div></div>
+    </section>
+
+    <section id="companies-page" class="page" data-page="companies">
+      <div class="page-hero compact">
+        <div><span class="eyebrow">MACRO-SENSITIVE COMPANIES</span><h2>Companies transmitting the macro signal</h2><p>Live or near-live quotes for major banks, energy, mining, technology and industrial bellwethers. Prices refresh from the live endpoint, with the latest hosted reading shown if an upstream feed is unavailable.</p></div>
+        <span class="source-chip" id="company-refresh">Connecting live feed…</span>
+      </div>
+      <div class="company-filter-row"><button class="company-filter active" data-sector="All">All</button><button class="company-filter" data-sector="Banks">Banks</button><button class="company-filter" data-sector="Energy">Energy</button><button class="company-filter" data-sector="Mining">Mining</button><button class="company-filter" data-sector="Technology">Technology</button><button class="company-filter" data-sector="Industrials">Industrials</button></div>
+      <div id="company-grid" class="company-grid"></div>
+      <div class="news-disclaimer">Quotes are indicative and may be delayed. They are provided for macro monitoring, not execution or investment advice.</div>
     </section>
 
     <section id="updates-page" class="page" data-page="updates">
@@ -940,7 +961,7 @@
         const rr = realRate(row);
         return `
           <tr>
-            <td><a class="country-link" href="#country=${encodeURIComponent(row.market)}"><strong>${row.market}</strong><span>Open profile →</span></a></td>
+            <td><a class="country-link" href="/countries/${encodeURIComponent(row.market.toLowerCase().replaceAll(' ', '-'))}"><strong>${row.market}</strong><span>Open profile →</span></a></td>
             <td>${row.region}</td>
             <td>${formatPct(row.inflation)}<small>annual CPI baseline</small></td>
             <td>${formatPct(row.rate)}<small>${row.rate === null ? "not rate-target based" : "central bank rate"}</small></td>
