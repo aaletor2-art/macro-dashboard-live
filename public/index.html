@@ -558,6 +558,7 @@
       </div>
       <div id="calendar-summary" class="calendar-summary"></div>
       <div class="panel calendar-panel"><div class="panel-head"><div><h2>Full release matrix</h2><div class="mini-kicker">Click a country name to open its complete profile.</div></div></div><div class="table-wrap"><table><thead><tr><th>Currency</th><th>Country</th><th>Indicator</th><th>Previous</th><th>Current</th><th>Forecast</th><th>Change</th></tr></thead><tbody id="full-calendar-body"></tbody></table></div></div>
+      <div id="calendar-comparison" class="comparison-mount"></div>
     </section>
 
     <section id="companies-page" class="page" data-page="companies">
@@ -877,6 +878,10 @@
       return value > 0 ? "Higher" : "Lower";
     }
 
+    const assetVisuals = {
+      "Australian Dollar":["A$","AUD / USD"],"Canadian Dollar":["C$","CAD / USD"],"Swiss Franc":["Fr","CHF / USD"],Euro:["€","EUR / USD"],"British Pound":["£","GBP / USD"],"Japanese Yen":["¥","JPY / USD"],"New Zealand Dollar":["NZ$","NZD / USD"],"US Dollar Index":["$","DXY"],Gold:["Au","Gold futures"],Silver:["Ag","Silver futures"],"WTI Crude":["Oil","WTI futures"],"Brent Crude":["Oil","Brent futures"],"Natural Gas":["Gas","Natural-gas futures"],Copper:["Cu","Copper futures"],Corn:["🌽","Corn futures"],Wheat:["🌾","Wheat futures"],Soybeans:["Soy","Soybean futures"],Coffee:["☕","Coffee futures"],Cocoa:["C","Cocoa futures"]
+    };
+
     function renderAssets() {
       assetBody.innerHTML = assetPrices.map(row => {
         const move = row.close - row.open;
@@ -885,7 +890,7 @@
         return `
           <tr>
             <td><strong>${row.asset}</strong></td>
-            <td>${row.symbol}<small>${row.convention || "USD price"}</small></td>
+            <td><span class="asset-symbol"><i>${assetVisuals[row.asset]?.[0] || "•"}</i><span><strong>${assetVisuals[row.asset]?.[1] || row.symbol}</strong><small>${row.symbol}</small></span></span></td>
             <td>${row.date}</td>
             <td>${formatNumber(row.open, decimals)}</td>
             <td>${formatNumber(row.close, decimals)}</td>

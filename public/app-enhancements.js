@@ -5,6 +5,19 @@
   const countryCodes = {
     "United Kingdom":"united-kingdom","United States":"united-states","Euro Area":"euro-area",Japan:"japan",China:"china",India:"india","South Korea":"south-korea",Taiwan:"taiwan",Singapore:"singapore","Hong Kong":"hong-kong",Australia:"australia",Canada:"canada",Brazil:"brazil",Mexico:"mexico",Nigeria:"nigeria","South Africa":"south-africa",Egypt:"egypt",Kenya:"kenya",Ghana:"ghana",Morocco:"morocco",Angola:"angola",Ethiopia:"ethiopia","Cote d'Ivoire":"cote-d-ivoire",Rwanda:"rwanda"
   };
+  const leaderPortraits = {
+    "United States": { name:"Donald Trump", role:"President", image:"https://commons.wikimedia.org/wiki/Special:FilePath/Donald_Trump_official_portrait.jpg" },
+    Nigeria: { name:"Bola Tinubu", role:"President", image:"https://commons.wikimedia.org/wiki/Special:FilePath/Bola_Tinubu_portrait.jpg" },
+    China: { name:"Xi Jinping", role:"President", image:"https://commons.wikimedia.org/wiki/Special:FilePath/Xi_Jinping_2019.jpg" }
+  };
+  const indicatorGuides = {
+    Inflation:"Shows how quickly consumer prices are changing. Higher-than-expected inflation can support interest rates and the currency, but squeeze households and company margins.",
+    GDP:"Measures economic growth. Stronger growth can improve earnings but may delay rate cuts if demand is adding to inflation.",
+    "Manufacturing PMI":"A survey of factories. Above 50 usually signals expansion; below 50 suggests contraction.",
+    "Services PMI":"A survey of the service economy. It is especially important in countries such as the UK and US.",
+    Unemployment:"Measures labour-market slack. A rising rate can weaken consumption and increase the case for easier policy.",
+    "Business confidence":"Shows how firms view current and future conditions. It can lead investment, hiring and growth."
+  };
   let hosted = { assets: [], news: [], generatedAt: null, date: null };
   let live = { companies: [], markets: [], generatedAt: null };
   let companySector = "All";
@@ -80,7 +93,15 @@
     const data = latestIndicator(country);
     if (!data) return `<div class="empty-state">No workbook release row is mapped for this market yet. Use the official source links below for the latest national release.</div>`;
     const fields = [["Inflation",data.cpi],["GDP",data.gdp],["Manufacturing PMI",data.man_pmi],["Services PMI",data.serv_pmi],["Unemployment",data.unemp],["Business confidence",data.bus_conf]];
-    return `<div class="release-list">${fields.map(([label,item]) => `<div class="release-row"><div><strong>${label}</strong><small>Previous ${number(item.previous,1)} · Forecast ${number(item.forecast,1)}</small></div><span class="badge ${signalClass(item.change || 0)}">${number(item.current,1)}</span></div>`).join("")}</div>`;
+    const slug = countryCodes[country] || country.toLowerCase().replaceAll(" ", "-");
+    return `<div class="release-list">${fields.map(([label,item]) => `<a class="release-row" href="${label === "Inflation" ? `/countries/${slug}/history` : `/calendar?indicator=${encodeURIComponent(label)}&country=${encodeURIComponent(country)}`}" title="${indicatorGuides[label]}"><div><strong>${label}</strong><small>Previous ${number(item.previous,1)} · Forecast ${number(item.forecast,1)} · Open detail →</small></div><span class="badge ${signalClass(item.change || 0)}">${number(item.current,1)}</span></a>`).join("")}</div>`;
+  }
+
+  function recentBriefHtml(row) {
+    const portrait = leaderPortraits[row.market];
+    const news = (hosted.news || []).filter(item => item.title?.toLowerCase().includes(row.market.toLowerCase()) || item.title?.toLowerCase().includes(row.currency?.toLowerCase?.() || "__none__")).slice(0,2);
+    const links = news.length ? news.map(item => `<a target="_blank" rel="noopener" href="${item.url}"><span>${item.source}</span><strong>${item.title}</strong></a>`).join("") : `<a target="_blank" rel="noopener" href="https://www.reuters.com/site-search/?query=${sourceQuery(row.market)}"><span>REUTERS SEARCH</span><strong>Open the newest reporting on ${row.market}</strong></a><a target="_blank" rel="noopener" href="https://tradingeconomics.com/${countryCodes[row.market] || row.market.toLowerCase().replaceAll(" ","-")}/indicators"><span>DATA WATCH</span><strong>Review the latest releases and forecasts</strong></a>`;
+    return `<section class="country-brief"><div class="country-brief-copy"><span class="eyebrow">MOST RECENT CONTEXT</span><h3>What has changed and why it matters</h3><p>${interpretation(row)}</p><div class="brief-links">${links}</div></div><aside class="need-to-know">${portrait ? `<img src="${portrait.image}" alt="${portrait.name}, ${portrait.role} of ${row.market}" loading="lazy"><strong>${portrait.name}</strong><small>${portrait.role}</small>` : `<span class="brief-flag">${flags[row.market] || "🌍"}</span><strong>${row.market}</strong><small>Country briefing</small>`}<h4>Need to know</h4><ul><li><b>Inflation:</b> ${pct(row.inflation)} and the main driver of the rate outlook.</li><li><b>Policy:</b> ${row.bias}.</li><li><b>Watch:</b> ${row.watch}.</li></ul></aside></section>`;
   }
 
   function renderCountry(name) {
@@ -93,6 +114,7 @@
         <div class="profile-title"><span class="flag" aria-hidden="true">${flags[row.market] || "🌍"}</span><div><span class="eyebrow">${row.region.toUpperCase()}</span><h2>${row.market}</h2><p>${row.bias} · Last dashboard refresh ${hosted.date || "pending"}</p></div></div>
         <div class="pressure-dial" style="--score:${row.pressure}"><div><strong>${row.pressure}</strong><span>PRESSURE / 100</span></div></div>
       </div>
+      ${recentBriefHtml(row)}
       <div class="profile-grid">
         <div class="insight-card"><h3>Macro snapshot</h3><div class="profile-metrics">
           <div class="profile-metric"><span>INFLATION</span><strong>${pct(row.inflation)}</strong><small>Annual CPI baseline</small></div>
@@ -109,7 +131,8 @@
         </div></div>
         <div class="insight-card"><div class="card-title-row"><h3>Latest mapped releases</h3><a href="/countries/${teSlug}/history">Historical data →</a></div>${releaseRows(row.market)}<a class="data-deep-link" href="/countries/${teSlug}/history"><span>INFLATION HISTORY</span><strong>25 releases · 5-year chart · release table</strong><small>Open the full historical dataset →</small></a></div>
         <div class="insight-card"><h3>Decision checklist</h3><div class="note-list" style="padding:0"><div class="note red"><strong>Primary risk</strong><span>${row.watch}</span></div><div class="note amber"><strong>Policy signal</strong><span>${row.bias}</span></div><div class="note green"><strong>What changes the view</strong><span>A material inflation surprise, a central-bank communication shift, or a sharp currency move.</span></div></div></div>
-      </div>`;
+      </div><div id="country-comparison" class="comparison-mount"></div>`;
+    renderComparison("country-comparison", [row.market,"United States","China"]);
   }
 
   function renderCountryHistory(name) {
@@ -206,12 +229,44 @@
       templateIndicators.forEach(row => filter.add(new Option(`${row.currency} · ${row.market}`, row.currency)));
       filter.addEventListener("change", renderFullCalendar);
     }
+    const query = new URLSearchParams(location.search);
+    const requestedIndicator = query.get("indicator");
     const selected = filter.value || "All";
     const fieldNames = [["Inflation", "cpi", "pp"], ["GDP", "gdp", "pp"], ["Manufacturing PMI", "man_pmi", "%"], ["Services PMI", "serv_pmi", "%"], ["Unemployment", "unemp", "pp"], ["Business confidence", "bus_conf", "%"]];
-    const rows = templateIndicators.filter(row => selected === "All" || row.currency === selected).flatMap(row => fieldNames.map(([label,key,unit]) => ({...row[key], label, unit, currency:row.currency, market:row.market})));
+    const rows = templateIndicators.filter(row => selected === "All" || row.currency === selected).flatMap(row => fieldNames.filter(([label]) => !requestedIndicator || label === requestedIndicator).map(([label,key,unit]) => ({...row[key], label, unit, currency:row.currency, market:row.market})));
     document.getElementById("full-calendar-body").innerHTML = rows.map(row => `<tr><td><strong>${row.currency}</strong></td><td><a class="country-link" href="/countries/${countryCodes[row.market] || row.market.toLowerCase().replaceAll(" ", "-")}">${row.market}</a></td><td>${row.label}</td><td>${number(row.previous,1)}</td><td><strong>${number(row.current,1)}</strong></td><td>${number(row.forecast,1)}</td><td><span class="badge ${signalClass(row.change || 0)}">${number(row.change,1)} ${row.unit}</span></td></tr>`).join("");
     const lines = (hosted.calendarLines || []).filter(line => selected === "All" || line[0] === selected);
     document.getElementById("calendar-summary").innerHTML = lines.length ? lines.map(line => `<article class="calendar-event"><span>${line[0]}</span><div><strong>${line[1]}</strong><small>${line[2]}</small><p>${line[3]}</p></div></article>`).join("") : `<div class="empty-state">No short calendar notes match this currency; the full release matrix remains below.</div>`;
+    renderComparison("calendar-comparison", query.get("country") ? [query.get("country"),"United States","China"] : ["United Kingdom","United States","China"] , requestedIndicator || "Inflation");
+  }
+
+  function renderComparison(mountId, defaults = [], initialIndicator = "Inflation") {
+    const mount = document.getElementById(mountId);
+    if (!mount || mount.dataset.ready) return;
+    mount.dataset.ready = "true";
+    const id = mountId.replace(/[^a-z]/gi, "");
+    const fields = [["Inflation","cpi"],["GDP","gdp"],["Manufacturing PMI","man_pmi"],["Services PMI","serv_pmi"],["Unemployment","unemp"],["Business confidence","bus_conf"]];
+    mount.innerHTML = `<section class="comparison-card"><div class="comparison-head"><div><span class="eyebrow">CROSS-COUNTRY COMPARISON</span><h3>Compare releases</h3><p>Select two or more countries. The chart compares previous, current and forecast readings.</p></div><label>Indicator<select id="${id}-indicator">${fields.map(([label])=>`<option ${label===initialIndicator?"selected":""}>${label}</option>`).join("")}</select></label></div><div class="comparison-selector" id="${id}-countries">${templateIndicators.map(row=>`<label><input type="checkbox" value="${row.market}" ${defaults.includes(row.market)?"checked":""}><span>${flags[row.market]||"🌍"} ${row.market}</span></label>`).join("")}</div><div class="comparison-chart-wrap"><canvas id="${id}-chart" width="1100" height="430" aria-label="Cross-country economic release comparison"></canvas></div><div class="comparison-links" id="${id}-links"></div></section>`;
+    const update = () => {
+      const checked = [...mount.querySelectorAll('input[type="checkbox"]:checked')];
+      if (checked.length > 8) { checked.at(-1).checked=false; return; }
+      const names = checked.map(input=>input.value);
+      drawComparisonChart(document.getElementById(`${id}-chart`), names, document.getElementById(`${id}-indicator`).value, fields);
+      document.getElementById(`${id}-links`).innerHTML = names.map(name=>`<a href="/countries/${countryCodes[name]}">${flags[name]||"🌍"} ${name} →</a>`).join("");
+    };
+    mount.querySelectorAll('input[type="checkbox"]').forEach(input=>input.addEventListener("change",update));
+    document.getElementById(`${id}-indicator`).addEventListener("change",update); update();
+  }
+
+  function drawComparisonChart(canvas, names, indicator, fields) {
+    if (!canvas) return; const ctx=canvas.getContext("2d"), ratio=window.devicePixelRatio||1, width=canvas.clientWidth||900, height=canvas.clientHeight||360;
+    canvas.width=width*ratio;canvas.height=height*ratio;ctx.scale(ratio,ratio);ctx.clearRect(0,0,width,height);
+    if(names.length<2){ctx.fillStyle="#66706b";ctx.font="14px sans-serif";ctx.fillText("Select at least two countries to compare.",24,38);return;}
+    const key=fields.find(([label])=>label===indicator)?.[1]||"cpi"; const rows=names.map(name=>templateIndicators.find(row=>row.market===name)).filter(Boolean); const series=["previous","current","forecast"], colours=["#9aa49f","#087a55","#375a7f"];
+    const values=rows.flatMap(row=>series.map(field=>Number(row[key]?.[field])||0)); let min=Math.min(0,...values),max=Math.max(0,...values);const spread=Math.max(1,max-min);min-=spread*.1;max+=spread*.12;const pad={left:48,right:16,top:36,bottom:62};const y=value=>pad.top+(max-value)*(height-pad.top-pad.bottom)/(max-min);const zero=y(0), group=(width-pad.left-pad.right)/rows.length, bar=Math.min(24,group/5);
+    ctx.font="11px sans-serif";ctx.strokeStyle="#e1e6e3";ctx.fillStyle="#65706b";ctx.textAlign="right";for(let i=0;i<=4;i++){const value=max-(max-min)*i/4,py=y(value);ctx.beginPath();ctx.moveTo(pad.left,py);ctx.lineTo(width-pad.right,py);ctx.stroke();ctx.fillText(value.toFixed(1),pad.left-7,py+3)}
+    rows.forEach((row,i)=>{const centre=pad.left+group*(i+.5);series.forEach((field,j)=>{const value=Number(row[key]?.[field])||0,x=centre+(j-1)*(bar+3)-bar/2,py=y(value);ctx.fillStyle=colours[j];ctx.fillRect(x,Math.min(py,zero),bar,Math.abs(zero-py));});ctx.save();ctx.translate(centre,height-16);ctx.rotate(-.35);ctx.fillStyle="#39433f";ctx.textAlign="right";ctx.fillText(row.market,0,0);ctx.restore();});
+    series.forEach((label,i)=>{ctx.fillStyle=colours[i];ctx.fillRect(pad.left+i*105,10,12,12);ctx.fillStyle="#53605a";ctx.textAlign="left";ctx.fillText(label[0].toUpperCase()+label.slice(1),pad.left+17+i*105,20)});
   }
 
   function renderCompanies() {
