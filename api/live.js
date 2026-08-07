@@ -28,14 +28,20 @@ function technicals(closes, highs, lows) {
   const upper = middle + deviation * 2;
   const lower = middle - deviation * 2;
   const last = clean.at(-1);
-  const kValues = [2, 1, 0].map(offset => {
-    const end = closes.length - offset;
-    const close = closes[end - 1];
-    const high = Math.max(...highs.slice(Math.max(0, end - 14), end).filter(Number.isFinite));
-    const low = Math.min(...lows.slice(Math.max(0, end - 14), end).filter(Number.isFinite));
-    return high === low ? 50 : ((close - low) / (high - low)) * 100;
+  const completeCandleIndices = closes
+    .map((value, index) => Number.isFinite(value) ? index : -1)
+    .filter(index => index >= 0)
+    .slice(-3);
+  const kValues = completeCandleIndices.map(index => {
+    const start = Math.max(0, index - 13);
+    const highWindow = highs.slice(start, index + 1).filter(Number.isFinite);
+    const lowWindow = lows.slice(start, index + 1).filter(Number.isFinite);
+    if (!highWindow.length || !lowWindow.length) return 50;
+    const high = Math.max(...highWindow);
+    const low = Math.min(...lowWindow);
+    return high === low ? 50 : ((closes[index] - low) / (high - low)) * 100;
   });
-  const stochasticK = kValues[2];
+  const stochasticK = kValues.at(-1);
   const stochasticD = kValues.reduce((sum, value) => sum + value, 0) / kValues.length;
   return { bollinger: { upper, middle, lower, position: last >= upper ? "Above upper" : last <= lower ? "Below lower" : last >= middle ? "Upper half" : "Lower half" }, stochastic: { k: stochasticK, d: stochasticD, state: stochasticK >= 80 ? "Overbought" : stochasticK <= 20 ? "Oversold" : "Neutral" } };
 }
