@@ -8,6 +8,8 @@
   let hosted = { assets: [], news: [], generatedAt: null, date: null };
   let live = { companies: [], markets: [], generatedAt: null };
   let companySector = "All";
+  let historyRange = "25";
+  let historyPayload = null;
 
   const pct = value => value == null ? "n/a" : `${Number(value).toFixed(2).replace(/\.00$/, "")}%`;
   const number = (value, digits = 2) => value == null ? "n/a" : Number(value).toLocaleString("en-GB", { maximumFractionDigits: digits });
@@ -90,6 +92,11 @@
         <div class="profile-title"><span class="flag" aria-hidden="true">${flags[row.market] || "🌍"}</span><div><span class="eyebrow">${row.region.toUpperCase()}</span><h2>${row.market}</h2><p>${row.bias} · Last dashboard refresh ${hosted.date || "pending"}</p></div></div>
         <div class="pressure-dial" style="--score:${row.pressure}"><div><strong>${row.pressure}</strong><span>PRESSURE / 100</span></div></div>
       </div>
+      <section class="history-card" aria-labelledby="history-title">
+        <div class="history-head"><div><span class="eyebrow">RELEASE HISTORY</span><h3 id="history-title">Inflation over time</h3><p id="history-subtitle">Loading official historical observations…</p></div><div class="history-ranges" role="group" aria-label="History range"><button class="history-range active" data-history-range="25">Last 25 releases</button><button class="history-range" data-history-range="5y">Last 5 years</button></div></div>
+        <div class="history-chart-wrap"><canvas id="history-chart" width="1100" height="390" aria-label="Interactive inflation history chart"></canvas><div id="history-tooltip" class="history-tooltip" hidden></div></div>
+        <div class="history-foot"><span id="history-latest">Latest: —</span><span id="history-source">Source: loading</span><a id="history-source-link" target="_blank" rel="noopener">Open source ↗</a></div>
+      </section>
       <div class="profile-grid">
         <div class="insight-card"><h3>Macro snapshot</h3><div class="profile-metrics">
           <div class="profile-metric"><span>INFLATION</span><strong>${pct(row.inflation)}</strong><small>Annual CPI baseline</small></div>
@@ -107,6 +114,54 @@
         <div class="insight-card"><h3>Latest mapped releases</h3>${releaseRows(row.market)}</div>
         <div class="insight-card"><h3>Decision checklist</h3><div class="note-list" style="padding:0"><div class="note red"><strong>Primary risk</strong><span>${row.watch}</span></div><div class="note amber"><strong>Policy signal</strong><span>${row.bias}</span></div><div class="note green"><strong>What changes the view</strong><span>A material inflation surprise, a central-bank communication shift, or a sharp currency move.</span></div></div></div>
       </div>`;
+    historyRange = "25";
+    historyPayload = null;
+    document.querySelectorAll("[data-history-range]").forEach(button => button.addEventListener("click", () => {
+      historyRange = button.dataset.historyRange;
+      document.querySelectorAll("[data-history-range]").forEach(item => item.classList.toggle("active", item === button));
+      drawHistoryChart();
+    }));
+    loadCountryHistory(teSlug);
+  }
+
+  async function loadCountryHistory(slug) {
+    try {
+      const response = await fetch(`/api/history?country=${encodeURIComponent(slug)}`);
+      if (!response.ok) throw new Error("History unavailable");
+      historyPayload = await response.json();
+      document.getElementById("history-subtitle").textContent = `${historyPayload.frequency[0].toUpperCase()}${historyPayload.frequency.slice(1)} observations · ${historyPayload.unit}`;
+      document.getElementById("history-source").textContent = `Source: ${historyPayload.source}`;
+      const link = document.getElementById("history-source-link"); link.href = historyPayload.sourceUrl;
+      const latest = historyPayload.observations.at(-1);
+      document.getElementById("history-latest").textContent = latest ? `Latest: ${pct(latest.value)} · ${new Date(`${latest.date}T00:00:00Z`).toLocaleDateString("en-GB",{month:"short",year:"numeric"})}` : "Latest: unavailable";
+      drawHistoryChart();
+    } catch {
+      document.getElementById("history-subtitle").textContent = "Historical observations are temporarily unavailable. The latest dashboard value remains above.";
+    }
+  }
+
+  function drawHistoryChart() {
+    const canvas = document.getElementById("history-chart");
+    if (!canvas || !historyPayload?.observations?.length) return;
+    const cutoff = new Date(); cutoff.setUTCFullYear(cutoff.getUTCFullYear() - 5);
+    const all = historyPayload.observations;
+    const points = historyRange === "5y" ? all.filter(item => new Date(`${item.date}T00:00:00Z`) >= cutoff) : all.slice(-25);
+    const ctx = canvas.getContext("2d"), ratio = window.devicePixelRatio || 1;
+    const width = canvas.clientWidth || 900, height = canvas.clientHeight || 320;
+    canvas.width = width * ratio; canvas.height = height * ratio; ctx.scale(ratio, ratio);
+    const pad = { left:52, right:18, top:22, bottom:40 }, values = points.map(item => item.value);
+    let min = Math.min(...values, 0), max = Math.max(...values, 0); const spread = Math.max(1, max - min); min -= spread * .12; max += spread * .12;
+    const x = index => pad.left + index * ((width-pad.left-pad.right)/Math.max(1,points.length-1));
+    const y = value => pad.top + (max-value) * ((height-pad.top-pad.bottom)/(max-min));
+    ctx.clearRect(0,0,width,height); ctx.font="12px Inter, system-ui, sans-serif"; ctx.textBaseline="middle"; ctx.strokeStyle="#e2e7e4"; ctx.fillStyle="#65706b"; ctx.lineWidth=1;
+    for(let i=0;i<=4;i++){ const value=max-(max-min)*i/4, py=y(value); ctx.beginPath();ctx.moveTo(pad.left,py);ctx.lineTo(width-pad.right,py);ctx.stroke();ctx.fillText(`${value.toFixed(1)}%`,6,py); }
+    const gradient=ctx.createLinearGradient(0,pad.top,0,height-pad.bottom);gradient.addColorStop(0,"rgba(8,122,85,.22)");gradient.addColorStop(1,"rgba(8,122,85,.015)");
+    ctx.beginPath(); points.forEach((item,index)=>index?ctx.lineTo(x(index),y(item.value)):ctx.moveTo(x(index),y(item.value))); ctx.lineTo(x(points.length-1),height-pad.bottom);ctx.lineTo(x(0),height-pad.bottom);ctx.closePath();ctx.fillStyle=gradient;ctx.fill();
+    ctx.beginPath();points.forEach((item,index)=>index?ctx.lineTo(x(index),y(item.value)):ctx.moveTo(x(index),y(item.value)));ctx.strokeStyle="#087a55";ctx.lineWidth=2.5;ctx.stroke();
+    const labels=[0,Math.floor((points.length-1)/2),points.length-1];ctx.fillStyle="#65706b";ctx.textAlign="center";labels.forEach(index=>ctx.fillText(new Date(`${points[index].date}T00:00:00Z`).toLocaleDateString("en-GB",{month:"short",year:"2-digit"}),x(index),height-17));
+    const tooltip=document.getElementById("history-tooltip");
+    const showPoint = event => { const rect=canvas.getBoundingClientRect(); const px=(event.clientX??event.touches?.[0]?.clientX)-rect.left; const index=Math.max(0,Math.min(points.length-1,Math.round((px-pad.left)/((width-pad.left-pad.right)/Math.max(1,points.length-1))))); const point=points[index]; tooltip.hidden=false;tooltip.style.left=`${Math.min(width-145,Math.max(8,x(index)-55))}px`;tooltip.style.top=`${Math.max(5,y(point.value)-62)}px`;tooltip.innerHTML=`<strong>${pct(point.value)}</strong><span>${new Date(`${point.date}T00:00:00Z`).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}</span>`; };
+    canvas.onpointermove=showPoint; canvas.onpointerleave=()=>{tooltip.hidden=true}; canvas.onclick=showPoint;
   }
 
   function renderMarkets() {
