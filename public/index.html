@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Automated Macroeconomic Dashboard</title>
   <meta name="description" content="Live cross-country macroeconomic intelligence, market prices, country profiles and trusted news links.">
-  <link rel="stylesheet" href="/enhancements.css?v=20260807-5">
+  <link rel="stylesheet" href="/enhancements.css?v=20260810-6">
   <style>
     :root {
       --bg: #f5f6f3;
@@ -557,11 +557,15 @@
 
     <section id="calendar-page" class="page" data-page="calendar">
       <div class="page-hero compact">
-        <div><span class="eyebrow">ECONOMIC CALENDAR</span><h2>All mapped releases in one place</h2><p>Previous, current, forecast and change for every release carried in the source workbook, plus the latest short calendar lines.</p></div>
-        <label class="country-picker">Filter currency<select id="calendar-filter"><option value="All">All currencies</option></select></label>
+        <div><span class="eyebrow">DAILY ECONOMIC CALENDAR</span><h2>Today’s releases, ranked by market impact</h2><p>See what matters first, what the result means and which markets may react. Then explore the full release library below.</p></div>
+        <div class="calendar-clock"><span>CALENDAR REFRESH</span><strong id="calendar-refresh">Latest data</strong><small>Times and releases may change</small></div>
       </div>
+      <div id="calendar-story" class="calendar-story"></div>
+      <div class="calendar-toolbar"><label>Currency<select id="calendar-filter"><option value="All">All currencies</option></select></label><label>Impact<select id="calendar-impact"><option>All impact</option><option>High</option><option>Medium</option><option>Low</option></select></label><label class="calendar-search">Find a metric<input id="calendar-search" type="search" placeholder="Inflation, GDP, PMI…"></label></div>
       <div id="calendar-summary" class="calendar-summary"></div>
-      <div class="panel calendar-panel"><div class="panel-head"><div><h2>Full release matrix</h2><div class="mini-kicker">Click a country name to open its complete profile.</div></div></div><div class="table-wrap"><table><thead><tr><th>Currency</th><th>Country</th><th>Indicator</th><th>Previous</th><th>Current</th><th>Forecast</th><th>Change</th></tr></thead><tbody id="full-calendar-body"></tbody></table></div></div>
+      <div id="calendar-news" class="calendar-news"></div>
+      <div class="panel calendar-panel"><div class="panel-head"><div><h2>Release library</h2><div class="mini-kicker">Ten rows at a time. Open a metric for its definition and the country for deeper history.</div></div><span id="calendar-result-count" class="source-chip"></span></div><div class="table-wrap"><table><thead><tr><th>Impact</th><th>Country</th><th>Indicator</th><th>Previous</th><th>Current</th><th>Forecast</th><th>Signal</th></tr></thead><tbody id="full-calendar-body"></tbody></table></div><div class="table-pager"><button id="calendar-prev">← Previous</button><span id="calendar-page-label">Page 1</span><button id="calendar-next">Next →</button></div></div>
+      <section class="metric-guide"><div class="card-title-row"><div><span class="eyebrow">BEGINNER TOOLKIT</span><h3>What each economic metric tells you</h3></div></div><div id="metric-guide-grid" class="metric-guide-grid"></div></section>
       <div id="calendar-comparison" class="comparison-mount"></div>
     </section>
 
@@ -571,6 +575,7 @@
         <label class="country-picker">Country<select id="company-country-filter"><option>United Kingdom</option></select><small id="company-refresh">Connecting live feed…</small></label>
       </div>
       <div class="company-filter-row"><button class="company-filter active" data-sector="All">All</button><button class="company-filter" data-sector="Banks">Banks</button><button class="company-filter" data-sector="Energy">Energy</button><button class="company-filter" data-sector="Mining">Mining</button><button class="company-filter" data-sector="Technology">Technology</button><button class="company-filter" data-sector="Industrials">Industrials</button></div>
+      <div class="company-tools"><label>Search companies<input id="company-search" type="search" placeholder="Name, ticker or sector"></label><label>Sort by<select id="company-sort"><option value="rank">Macro importance</option><option value="move">Largest daily move</option><option value="name">Company name</option></select></label><div class="view-toggle" role="group" aria-label="Company layout"><button class="active" data-company-view="cards">Cards</button><button data-company-view="compact">Compact</button></div></div>
       <div id="company-grid" class="company-grid"></div>
       <div class="news-disclaimer">Quotes are indicative and may be delayed. They are provided for macro monitoring, not execution or investment advice.</div>
     </section>
@@ -581,9 +586,10 @@
 
     <section id="trading-plan-page" class="page" data-page="trading-plan">
       <div class="plan-header">
-        <div><span class="eyebrow">LAT TRADING PLAN · RULE-BASED</span><h2>Technical confluence with macro context</h2><p>Select a live market and country, mark only the conditions visible on your chart, then review the deterministic point score. Nothing on this page uses generative AI.</p></div>
+        <div><span class="eyebrow">LAT TRADING PLAN · RULE-BASED</span><h2>Trade setup: fundamentals first, entry second</h2><p>Start with the country’s inflation, rates, growth pressure and next event. Then use Bollinger Bands, stochastic and your point system to confirm timing. Nothing on this page uses generative AI.</p></div>
         <span class="source-chip" id="plan-refresh">Connecting live feed…</span>
       </div>
+      <div id="plan-fundamental-banner" class="plan-fundamental-banner"></div>
       <div class="plan-controls">
         <label>Market<select id="plan-asset"></select></label>
         <label>Country context<select id="plan-country"></select></label>
@@ -1049,6 +1055,6 @@
     render();
     loadHostedDailyData();
   </script>
-  <script src="/app-enhancements.js?v=20260807-5"></script>
+  <script src="/app-enhancements.js?v=20260810-6"></script>
 </body>
 </html>
