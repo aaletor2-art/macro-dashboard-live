@@ -23,6 +23,8 @@
   let companyUniverse = [];
   let companyQuotes = [];
   let companySector = "All";
+  let companyView = "cards";
+  let calendarPage = 0;
   let historyRange = "25";
   let historyPayload = null;
 
@@ -269,16 +271,33 @@
     const filter = document.getElementById("calendar-filter");
     if (filter.options.length === 1) {
       templateIndicators.forEach(row => filter.add(new Option(`${row.currency} · ${row.market}`, row.currency)));
-      filter.addEventListener("change", renderFullCalendar);
+      filter.addEventListener("change", () => { calendarPage=0; renderFullCalendar(); });
+      document.getElementById("calendar-impact")?.addEventListener("change", () => { calendarPage=0; renderFullCalendar(); });
+      document.getElementById("calendar-search")?.addEventListener("input", () => { calendarPage=0; renderFullCalendar(); });
+      document.getElementById("calendar-prev")?.addEventListener("click", () => { calendarPage=Math.max(0,calendarPage-1); renderFullCalendar(); });
+      document.getElementById("calendar-next")?.addEventListener("click", () => { calendarPage+=1; renderFullCalendar(); });
     }
     const query = new URLSearchParams(location.search);
     const requestedIndicator = query.get("indicator");
     const selected = filter.value || "All";
     const fieldNames = [["Inflation", "cpi", "pp"], ["GDP", "gdp", "pp"], ["Manufacturing PMI", "man_pmi", "%"], ["Services PMI", "serv_pmi", "%"], ["Unemployment", "unemp", "pp"], ["Business confidence", "bus_conf", "%"]];
-    const rows = templateIndicators.filter(row => selected === "All" || row.currency === selected).flatMap(row => fieldNames.filter(([label]) => !requestedIndicator || label === requestedIndicator).map(([label,key,unit]) => ({...row[key], label, unit, currency:row.currency, market:row.market})));
-    document.getElementById("full-calendar-body").innerHTML = rows.map(row => `<tr><td><strong>${row.currency}</strong></td><td><a class="country-link" href="/countries/${countryCodes[row.market] || row.market.toLowerCase().replaceAll(" ", "-")}">${row.market}</a></td><td>${row.label}</td><td>${number(row.previous,1)}</td><td><strong>${number(row.current,1)}</strong></td><td>${number(row.forecast,1)}</td><td><span class="badge ${signalClass(row.change || 0)}">${number(row.change,1)} ${row.unit}</span></td></tr>`).join("");
+    const impactFor = label => ["Inflation","GDP","Unemployment"].includes(label) ? "High" : label.includes("PMI") ? "Medium" : "Low";
+    const usefulness = {High:"Often moves currencies, rates and equity indices",Medium:"Useful confirmation of economic direction",Low:"Adds context; rarely a standalone trade trigger"};
+    const impact=document.getElementById("calendar-impact")?.value||"All impact", search=(document.getElementById("calendar-search")?.value||"").trim().toLowerCase();
+    const rows = templateIndicators.filter(row => selected === "All" || row.currency === selected).flatMap(row => fieldNames.filter(([label]) => !requestedIndicator || label === requestedIndicator).map(([label,key,unit]) => ({...row[key], label, unit, currency:row.currency, market:row.market, impact:impactFor(label)}))).filter(row=>(impact==="All impact"||row.impact===impact)&&(!search||`${row.label} ${row.market} ${row.currency}`.toLowerCase().includes(search)));
+    const pages=Math.max(1,Math.ceil(rows.length/10)); calendarPage=Math.min(calendarPage,pages-1); const visible=rows.slice(calendarPage*10,calendarPage*10+10);
+    document.getElementById("full-calendar-body").innerHTML = visible.length ? visible.map(row => `<tr><td><span class="impact-pill ${row.impact.toLowerCase()}">${row.impact}</span></td><td><a class="country-link" href="/countries/${countryCodes[row.market] || row.market.toLowerCase().replaceAll(" ", "-")}">${flags[row.market]||"🌍"} ${row.market}</a><small>${row.currency}</small></td><td><button class="metric-info" data-metric="${row.label}">${row.label}</button><small>${usefulness[row.impact]}</small></td><td>${number(row.previous,1)}</td><td><strong>${number(row.current,1)}</strong></td><td>${number(row.forecast,1)}</td><td><span class="badge ${signalClass(row.change || 0)}">${row.change>0?"Above":row.change<0?"Below":"In line"} · ${number(row.change,1)} ${row.unit}</span></td></tr>`).join("") : `<tr><td colspan="7">No releases match these filters.</td></tr>`;
+    document.getElementById("calendar-result-count").textContent=`${rows.length} releases`;
+    document.getElementById("calendar-page-label").textContent=`Page ${calendarPage+1} of ${pages}`;
+    document.getElementById("calendar-prev").disabled=calendarPage===0; document.getElementById("calendar-next").disabled=calendarPage>=pages-1;
     const lines = (hosted.calendarLines || []).filter(line => selected === "All" || line[0] === selected);
-    document.getElementById("calendar-summary").innerHTML = lines.length ? lines.map(line => `<article class="calendar-event"><span>${line[0]}</span><div><strong>${line[1]}</strong><small>${line[2]}</small><p>${line[3]}</p></div></article>`).join("") : `<div class="empty-state">No short calendar notes match this currency; the full release matrix remains below.</div>`;
+    const keyRows=[...rows].sort((a,b)=>({High:3,Medium:2,Low:1}[b.impact]-{High:3,Medium:2,Low:1}[a.impact]||Math.abs(b.change||0)-Math.abs(a.change||0))).slice(0,6);
+    document.getElementById("calendar-story").innerHTML=`<section><span class="eyebrow">TODAY'S STORY</span><h3>${keyRows.filter(x=>x.impact==="High").length} high-impact releases lead the watchlist</h3><p>${keyRows[0]?`${keyRows[0].market} ${keyRows[0].label.toLowerCase()} is the first priority. ${keyRows[0].change>0?"It is running above the comparison baseline":"It is at or below the comparison baseline"}, so check the currency and rate response before using it as a directional signal.`:"Choose a currency or metric to build today’s watchlist."}</p></section><div class="story-impact">${["High","Medium","Low"].map(level=>`<div class="${level.toLowerCase()}"><strong>${rows.filter(x=>x.impact===level).length}</strong><span>${level} impact</span><small>${usefulness[level]}</small></div>`).join("")}</div>`;
+    document.getElementById("calendar-summary").innerHTML = keyRows.map(row => `<article class="calendar-event ${row.impact.toLowerCase()}"><span>${row.currency}</span><div><div class="event-impact"><b>${row.impact} impact</b><small>${row.market}</small></div><strong>${row.label}</strong><p>${indicatorGuides[row.label]} <a href="/countries/${countryCodes[row.market]}/history?indicator=${row.label==="GDP"?"gdp":row.label==="Unemployment"?"unemployment":"inflation"}">Open data →</a></p></div></article>`).join("") || `<div class="empty-state">No releases match this view.</div>`;
+    const relatedNews=(hosted.news||[]).slice(0,3); document.getElementById("calendar-news").innerHTML=`<div><span class="eyebrow">CALENDAR + CONTEXT</span><h3>Why markets may care today</h3><p>Calendar data tells you what changed; reporting helps explain why and how markets are interpreting it.</p></div>${relatedNews.map(item=>`<a target="_blank" rel="noopener" href="${item.url}"><span>${item.source}</span><strong>${item.title}</strong><small>${whyItMatters(item.title)}</small></a>`).join("")}`;
+    document.getElementById("metric-guide-grid").innerHTML=Object.entries(indicatorGuides).map(([label,guide])=>`<button data-guide="${label}"><span>${impactFor(label)} impact</span><strong>${label}</strong><small>${guide}</small><em>Click to filter calendar →</em></button>`).join("");
+    document.querySelectorAll("[data-guide],.metric-info").forEach(button=>button.addEventListener("click",()=>{document.getElementById("calendar-search").value=button.dataset.guide||button.dataset.metric;calendarPage=0;renderFullCalendar();document.querySelector(".calendar-panel").scrollIntoView({behavior:"smooth"});}));
+    document.getElementById("calendar-refresh").textContent=hosted.date?`Refreshed ${hosted.date}`:"Latest data";
     renderComparison("calendar-comparison", query.get("country") ? [query.get("country"),"United States","China"] : ["United Kingdom","United States","China"] , requestedIndicator || "Inflation");
   }
 
@@ -316,13 +335,16 @@
     const root = document.getElementById("company-grid");
     const countryFilter=document.getElementById("company-country-filter");
     if(!countryFilter.dataset.bound&&companyUniverse.length){const requested=new URLSearchParams(location.search).get("country")||"United Kingdom";countryFilter.innerHTML=[...new Set(companyUniverse.map(x=>x.country))].map(country=>`<option value="${country}" ${country===requested?"selected":""}>${flags[country]||"🌍"} ${country}</option>`).join("");countryFilter.addEventListener("change",loadCompanyCountry);countryFilter.dataset.bound="true";loadCompanyCountry();}
-    const rows = companyQuotes.filter(row => companySector === "All" || row.sector === companySector);
+    const search=(document.getElementById("company-search")?.value||"").toLowerCase(),sort=document.getElementById("company-sort")?.value||"rank";
+    const rows = companyQuotes.filter(row => (companySector === "All" || row.sector === companySector)&&(!search||`${row.name} ${row.symbol||""} ${row.sector}`.toLowerCase().includes(search))).sort((a,b)=>sort==="move"?Math.abs(b.changePct||0)-Math.abs(a.changePct||0):sort==="name"?a.name.localeCompare(b.name):(a.rank||99)-(b.rank||99));
     if (!rows.length) { root.innerHTML = `<div class="empty-state">Select a country to load its five company bellwethers.</div>`; return; }
     root.innerHTML = rows.map(row => {
       const unavailable = row.unavailable || row.price == null;
       const direction = unavailable || Math.abs(row.changePct || 0) < .01 ? "flat" : row.changePct > 0 ? "up" : "down";
-      return `<a class="company-card" href="/companies/${row.id}"><div class="company-card-head"><img class="company-logo" src="https://www.google.com/s2/favicons?domain=${row.domain}&sz=128" alt="${row.name} logo"><div><span>${row.sector}</span><h3>${row.name}</h3><small>${flags[row.country] || "🌍"} ${row.country} · ${row.symbol||"Private/local feed"}</small></div></div><div class="company-quote"><strong>${unavailable ? "Price unavailable" : `${row.currency || ""} ${number(row.price,2)}`}</strong><span class="badge ${direction}">${unavailable ? "Profile available" : `${row.changePct >= 0 ? "+" : ""}${number(row.changePct)}%`}</span></div><div class="move-line"><span>${row.exchange || row.reason || "Company profile"}</span><span>Open analysis →</span></div></a>`;
+      const bar=Math.min(100,Math.max(4,50+(row.changePct||0)*12));
+      return `<a class="company-card" href="/companies/${row.id}"><div class="company-rank">#${row.rank||"—"} macro bellwether</div><div class="company-card-head"><img class="company-logo" src="https://www.google.com/s2/favicons?domain=${row.domain}&sz=128" alt="${row.name} logo"><div><span>${row.sector}</span><h3>${row.name}</h3><small>${flags[row.country] || "🌍"} ${row.country} · ${row.symbol||"Private/local feed"}</small></div></div><div class="company-quote"><strong>${unavailable ? "Price unavailable" : `${row.currency || ""} ${number(row.price,2)}`}</strong><span class="badge ${direction}">${unavailable ? "Profile" : `${row.changePct >= 0 ? "+" : ""}${number(row.changePct)}% today`}</span></div><div class="company-move-bar"><i style="width:${bar}%" class="${direction}"></i></div><div class="move-line"><span>${row.exchange || row.reason || "Company profile"}</span><span>Price + macro analysis →</span></div></a>`;
     }).join("");
+    root.classList.toggle("compact",companyView==="compact");
   }
 
   async function loadCompanyCountry(){const select=document.getElementById("company-country-filter");if(!select)return;document.getElementById("company-grid").innerHTML=`<div class="empty-state">Loading five company prices…</div>`;try{const response=await fetch(`/api/companies?country=${encodeURIComponent(select.value)}&ts=${Date.now()}`);const data=await response.json();companyQuotes=data.peers||[];document.getElementById("company-refresh").textContent=`Updated ${new Date(data.generatedAt).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}`;}catch{companyQuotes=companyUniverse.filter(x=>x.country===select.value).slice(0,5).map(x=>({...x,unavailable:true}));}renderCompanies();}
@@ -395,6 +417,8 @@
     document.getElementById("combined-score").textContent=combined;
     document.getElementById("conviction-label").textContent=conviction(combined);
     document.getElementById("fundamental-country").textContent=`${country.market} context`;
+    const edge=fundamentalScore>=60?`${direction} fundamentals supportive`:fundamentalScore<=40?`${direction} fundamentals opposed`:"Fundamentals broadly balanced";
+    document.getElementById("plan-fundamental-banner").innerHTML=`<div><span>KEY FUNDAMENTAL VIEW</span><strong>${flags[country.market]||"🌍"} ${country.market}: ${edge}</strong><small>${country.bias} · ${country.watch}</small></div><div><span>INFLATION</span><strong>${pct(country.inflation)}</strong><small>${country.temp} regime</small></div><div><span>REAL RATE</span><strong>${pct(real)}</strong><small>Currency support gauge</small></div><div><span>NEXT EVENT RISK</span><strong>${hosted.calendarLines?.some(line=>line[0]===latestIndicator(country.market)?.currency)?"On calendar":"Check manually"}</strong><small><a href="/calendar?country=${encodeURIComponent(country.market)}">Open calendar →</a></small></div>`;
     document.getElementById("fundamental-read").innerHTML=`<div class="read-cell"><span>INFLATION</span><strong>${pct(country.inflation)}</strong><small>${country.temp} regime</small></div><div class="read-cell"><span>POLICY RATE</span><strong>${pct(country.rate)}</strong><small>${country.bias}</small></div><div class="read-cell"><span>REAL RATE</span><strong>${pct(real)}</strong><small>Policy minus CPI</small></div><div class="read-cell"><span>PRESSURE</span><strong>${country.pressure}/100</strong><small>${country.watch}</small></div><div class="read-cell"><span>DIRECTIONAL SCORE</span><strong>${fundamentalScore}/100</strong><small>${direction} rule result</small></div><div class="read-cell"><span>EVENT CHECK</span><strong>${hosted.calendarLines?.some(line=>line[0]===latestIndicator(country.market)?.currency)?"Mapped":"Manual"}</strong><small>Review calendar before entry</small></div>`;
     const bb=item?.technical?.bollinger, stoch=item?.technical?.stochastic;
     document.getElementById("technical-read").innerHTML=`<div class="read-cell"><span>BB POSITION</span><strong>${bb?.position || "Waiting"}</strong><small>20-period, 2 standard deviations</small></div><div class="read-cell"><span>BB MIDDLE</span><strong>${number(bb?.middle,5)}</strong><small>Upper ${number(bb?.upper,5)} · Lower ${number(bb?.lower,5)}</small></div><div class="read-cell"><span>STOCHASTIC</span><strong>${stoch?.state || "Waiting"}</strong><small>%K ${number(stoch?.k,1)} · %D ${number(stoch?.d,1)}</small></div>`;
@@ -459,6 +483,9 @@
     document.querySelectorAll(".company-filter").forEach(item => item.classList.toggle("active", item === button));
     renderCompanies();
   }));
+  document.getElementById("company-search")?.addEventListener("input",renderCompanies);
+  document.getElementById("company-sort")?.addEventListener("change",renderCompanies);
+  document.querySelectorAll("[data-company-view]").forEach(button=>button.addEventListener("click",()=>{companyView=button.dataset.companyView;document.querySelectorAll("[data-company-view]").forEach(item=>item.classList.toggle("active",item===button));renderCompanies();}));
   route();
   hydrate();
 })();
