@@ -15,7 +15,7 @@ for (const file of required) {
 }
 
 const enhancements = await fs.readFile("public/app-enhancements.js", "utf8");
-for (const requiredText of ["history-chart", "Last 25 releases", "Last 5 years", "/api/history"]) {
+for (const requiredText of ["history-chart", "Last 25", "Last 5 years", "/api/history", "RELATIVE MACRO WHEEL"]) {
   if (!enhancements.includes(requiredText)) throw new Error(`Historical charts are missing ${requiredText}`);
 }
 
