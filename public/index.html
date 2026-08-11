@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="/trade-sheet.css?v=20260811-1">
   <link rel="stylesheet" href="/euro-area.css?v=20260811-1">
   <link rel="stylesheet" href="/company-all.css?v=20260811-1">
+  <link rel="stylesheet" href="/acceptance-fixes.css?v=20260811-1">
   <style>
     :root {
       --bg: #f5f6f3;
@@ -604,9 +605,11 @@
       <div id="plan-fundamental-banner" class="plan-fundamental-banner"></div>
       <div class="plan-controls">
         <label>Market<select id="plan-asset"></select></label>
-        <label>Country context<select id="plan-country"></select></label>
+        <label>Primary country<select id="plan-country"></select></label>
+        <label>Comparison country<select id="plan-counter-country"></select></label>
         <label>Direction<select id="plan-direction"><option>Buy</option><option>Sell</option></select></label>
       </div>
+      <section id="plan-relative-macro" class="plan-relative-macro"></section>
       <div class="plan-layout">
         <div class="plan-main">
           <section class="plan-card chart-card"><div class="plan-card-head"><div><span>LIVE PRICE</span><h3 id="plan-price">—</h3></div><div id="plan-change" class="badge flat">—</div></div><canvas id="plan-chart" width="900" height="320" aria-label="Recent market price chart with Bollinger Bands"></canvas><div class="chart-legend"><span><i class="price-line"></i>Price</span><span><i class="middle-line"></i>20-period mean</span><span><i class="band-line"></i>2σ bands</span></div></section>
