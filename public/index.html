@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/enhancements.css?v=20260810-6">
   <link rel="stylesheet" href="/trade-sheet.css?v=20260811-1">
   <link rel="stylesheet" href="/euro-area.css?v=20260811-1">
+  <link rel="stylesheet" href="/company-all.css?v=20260811-1">
   <style>
     :root {
       --bg: #f5f6f3;
@@ -585,7 +586,8 @@
         <label class="country-picker">Country<select id="company-country-filter"><option>United Kingdom</option></select><small id="company-refresh">Connecting live feed…</small></label>
       </div>
       <div class="company-filter-row"><button class="company-filter active" data-sector="All">All</button><button class="company-filter" data-sector="Banks">Banks</button><button class="company-filter" data-sector="Energy">Energy</button><button class="company-filter" data-sector="Mining">Mining</button><button class="company-filter" data-sector="Technology">Technology</button><button class="company-filter" data-sector="Industrials">Industrials</button></div>
-      <div class="company-tools"><label>Search companies<input id="company-search" type="search" placeholder="Name, ticker or sector"></label><label>Sort by<select id="company-sort"><option value="rank">Macro importance</option><option value="move">Largest daily move</option><option value="name">Company name</option></select></label><div class="view-toggle" role="group" aria-label="Company layout"><button class="active" data-company-view="cards">Cards</button><button data-company-view="compact">Compact</button></div></div>
+      <div class="company-tools"><label>Search companies<input id="company-search" type="search" placeholder="Name, ticker, country or sector"></label><label>Sort by<select id="company-sort"><option value="rank">Macro importance</option><option value="move">Largest daily move</option><option value="name">Company name</option><option value="country">Country</option></select></label><div class="view-toggle" role="group" aria-label="Company layout"><button class="active" data-company-view="cards">Cards</button><button data-company-view="compact">Compact</button></div></div>
+      <div id="company-result-count" class="company-result-count"></div>
       <div id="company-grid" class="company-grid"></div>
       <div class="news-disclaimer">Quotes are indicative and may be delayed. They are provided for macro monitoring, not execution or investment advice.</div>
     </section>
