@@ -6,6 +6,8 @@
   <title>Automated Macroeconomic Dashboard</title>
   <meta name="description" content="Live cross-country macroeconomic intelligence, market prices, country profiles and trusted news links.">
   <link rel="stylesheet" href="/enhancements.css?v=20260810-6">
+  <link rel="stylesheet" href="/trade-sheet.css?v=20260811-1">
+  <link rel="stylesheet" href="/euro-area.css?v=20260811-1">
   <style>
     :root {
       --bg: #f5f6f3;
@@ -537,6 +539,14 @@
         </div>
         <label class="country-picker">Jump to a country<select id="country-select"><option value="">Choose country…</option></select></label>
       </div>
+      <div class="regime-legend" aria-label="Macro temperature legend">
+        <strong>How to read the temperature</strong>
+        <span><i class="legend-dot hot"></i><b>Hot</b> high inflation or policy pressure</span>
+        <span><i class="legend-dot warm"></i><b>Warm</b> above-normal pressure; policy still matters</span>
+        <span><i class="legend-dot neutral"></i><b>Neutral</b> broadly balanced growth and inflation</span>
+        <span><i class="legend-dot cool"></i><b>Cool</b> weak price or demand pressure; easing risk</span>
+        <span><i class="legend-dot special"></i><b>Special</b> a different framework, such as an FX band</span>
+      </div>
       <div id="country-grid" class="country-grid"></div>
       <div class="landing-news-head"><div><span class="eyebrow">LATEST CONTEXT</span><h2>News affecting the macro view</h2></div><span class="source-chip" id="landing-news-refresh">Latest refresh</span></div>
       <div id="landing-news-grid" class="news-grid"></div>
@@ -549,8 +559,8 @@
 
     <section id="markets-page" class="page" data-page="markets">
       <div class="page-hero compact">
-        <div><span class="eyebrow">DAILY MARKET TAPE</span><h2>FX and commodities</h2><p>Latest completed daily open and close. Select a row to see the move in context.</p></div>
-        <span class="source-chip">Yahoo Finance chart feed</span>
+        <div><span class="eyebrow">LIVE MARKET TAPE</span><h2>Current FX and commodity prices</h2><p>Latest available quote, daily move, quotation convention and timestamp. Prices are indicative and may be delayed.</p></div>
+        <span class="source-chip">Yahoo Finance · 5-minute cache</span>
       </div>
       <div id="market-cards" class="market-cards"></div>
     </section>
@@ -607,6 +617,20 @@
           <section class="plan-card plan-rule"><strong>Decision rule</strong><p>0–4 weak setup · 5–7 watch only · 8–10 trade possible · 11+ strong confluence. Combined conviction uses 60% technical and 40% fundamental evidence.</p></section>
         </aside>
       </div>
+      <section class="trade-sheet-builder" id="trade-sheet-builder">
+        <div class="trade-sheet-head"><div><span class="eyebrow">EDITABLE LAT TRADE SHEET</span><h2>Turn this setup into your macro trade plan</h2><p>Auto-fill the rule-based macro evidence, add your own reasoning and charts, then print or download an editable Word document.</p></div><div class="trade-sheet-actions"><button id="trade-autofill">Auto-fill macro logic</button><button id="trade-print">Print sheet</button><button id="trade-download" class="primary">Download Word</button></div></div>
+        <div class="trade-form-grid">
+          <label>Name<input id="trade-name" value="Alexander Aletor"></label><label>Chart period<input id="trade-chart-period" placeholder="e.g. 4 hour"></label><label>Expected duration<input id="trade-duration" placeholder="e.g. 2–3 days"></label><label>Initial risk<input id="trade-risk" placeholder="£ or %"></label><label>Initial reward<input id="trade-reward" placeholder="£ or %"></label><label>Initial RRR<input id="trade-rrr" placeholder="e.g. 1:2"></label>
+          <label>Entry date<input id="trade-date" type="date"></label><label>Entry time<input id="trade-time" type="time"></label><label>Lot size<input id="trade-lot" inputmode="decimal"></label><label>Entry price<input id="trade-entry" inputmode="decimal"></label><label>Stop loss<input id="trade-stop" inputmode="decimal"></label><label>Target<input id="trade-target" inputmode="decimal"></label>
+        </div>
+        <div class="trade-writing-grid">
+          <label class="macro-logic-field">Macro logic <small>Country conditions → relative currency view → trade direction → invalidation</small><textarea id="trade-macro-logic" rows="8" placeholder="Use Auto-fill, then edit this into your own argument."></textarea></label>
+          <label>Set-up (fundamental)<textarea id="trade-fundamental" rows="5"></textarea></label><label>Set-up (technical)<textarea id="trade-technical" rows="5"></textarea></label><label>Trigger<textarea id="trade-trigger" rows="4"></textarea></label><label>Execution<textarea id="trade-execution" rows="4"></textarea></label><label>Reason for stop loss<textarea id="trade-stop-reason" rows="4"></textarea></label><label>Reason for target<textarea id="trade-target-reason" rows="4"></textarea></label><label>In-trade management<textarea id="trade-management" rows="5"></textarea></label><label>Reason for exit<textarea id="trade-exit-reason" rows="5"></textarea></label><label>Lessons learned<textarea id="trade-lessons" rows="5"></textarea></label>
+        </div>
+        <div class="trade-form-grid trade-exit-fields"><label>Actual duration (hours)<input id="trade-actual-duration" inputmode="decimal"></label><label>Exit date<input id="trade-exit-date" type="date"></label><label>Exit time<input id="trade-exit-time" type="time"></label><label>Exit price<input id="trade-exit-price" inputmode="decimal"></label><label>Pips<input id="trade-pips" inputmode="decimal"></label><label>Profit / loss (£)<input id="trade-pnl" inputmode="decimal"></label></div>
+        <div class="trade-upload-grid"><label>Entry chart<input id="trade-image-entry" type="file" accept="image/*"><span id="trade-preview-entry">Add image</span></label><label>Management chart<input id="trade-image-management" type="file" accept="image/*"><span id="trade-preview-management">Add image</span></label><label>Exit chart<input id="trade-image-exit" type="file" accept="image/*"><span id="trade-preview-exit">Add image</span></label></div>
+        <p class="trade-sheet-note">The downloaded .doc is editable in Microsoft Word. Verify live prices and economic data before placing a trade.</p>
+      </section>
     </section>
 
     <section id="updates-page" class="page" data-page="updates">
@@ -621,18 +645,19 @@
 
   <script>
     const markets = [
-      { market: "United Kingdom", region: "UK & G7", inflation: 3.3, rate: 3.75, temp: "Warm", bias: "Hold / easing watch", pressure: 62, watch: "Services inflation, wages, growth drag" },
-      { market: "United States", region: "UK & G7", inflation: 2.9, rate: 3.75, temp: "Warm", bias: "Hold / slow easing", pressure: 60, watch: "Core inflation, labour market cooling" },
-      { market: "Euro Area", region: "UK & G7", inflation: 2.4, rate: 2.40, temp: "Neutral", bias: "Hold", pressure: 48, watch: "Growth softness, wage pass-through" },
-      { market: "Japan", region: "Asia", inflation: 2.7, rate: 1.00, temp: "Warm", bias: "Hike risk", pressure: 66, watch: "Wages, yen, imported inflation" },
+      { market: "United Kingdom", region: "G7", inflation: 3.3, rate: 3.75, temp: "Warm", bias: "BoE hold / easing watch", pressure: 62, watch: "Services inflation, wages, growth drag" },
+      { market: "United States", region: "G7", inflation: 2.9, rate: 3.75, temp: "Warm", bias: "Fed hold / slow easing", pressure: 60, watch: "Core inflation, labour market cooling" },
+      { market: "Euro Area", region: "Euro Area", inflation: 2.4, rate: 2.40, temp: "Neutral", bias: "ECB hold", pressure: 48, watch: "EA21 growth softness, wage pass-through" },
+      { market: "Bulgaria", region: "Euro Area", inflation: 5.2, rate: 2.40, temp: "Warm", bias: "ECB-linked hold", pressure: 69, watch: "Euro adoption, services inflation, wage convergence" },
+      { market: "Japan", region: "G7", inflation: 2.7, rate: 1.00, temp: "Warm", bias: "Hike risk", pressure: 66, watch: "Wages, yen, imported inflation" },
       { market: "China", region: "Asia", inflation: 0.2, rate: 3.00, temp: "Cool", bias: "Easing / support", pressure: 34, watch: "Deflation risk, property, credit demand" },
       { market: "India", region: "Asia", inflation: 5.0, rate: 5.25, temp: "Warm", bias: "Hold", pressure: 58, watch: "Food prices, rupee, oil" },
       { market: "South Korea", region: "Asia", inflation: 2.3, rate: 2.50, temp: "Neutral", bias: "Hold / easing watch", pressure: 47, watch: "Exports, won, household debt" },
       { market: "Taiwan", region: "Asia", inflation: 2.0, rate: 2.00, temp: "Neutral", bias: "Hold", pressure: 45, watch: "Semis cycle, TWD, imported prices" },
       { market: "Singapore", region: "Asia", inflation: 2.4, rate: null, temp: "Special", bias: "FX-band policy", pressure: 42, watch: "MAS exchange-rate stance" },
       { market: "Hong Kong", region: "Asia", inflation: 1.7, rate: 4.00, temp: "Warm", bias: "Fed-linked hold", pressure: 57, watch: "HKD peg, property, liquidity" },
-      { market: "Australia", region: "UK & G7", inflation: 3.2, rate: 4.35, temp: "Warm", bias: "Hold / hike risk", pressure: 65, watch: "Housing, wages, trimmed mean CPI" },
-      { market: "Canada", region: "UK & G7", inflation: 2.4, rate: 2.25, temp: "Neutral", bias: "Hold", pressure: 44, watch: "Shelter CPI, consumption" },
+      { market: "Australia", region: "Asia", inflation: 3.2, rate: 4.35, temp: "Warm", bias: "Hold / hike risk", pressure: 65, watch: "Housing, wages, trimmed mean CPI" },
+      { market: "Canada", region: "G7", inflation: 2.4, rate: 2.25, temp: "Neutral", bias: "Hold", pressure: 44, watch: "Shelter CPI, consumption" },
       { market: "Brazil", region: "LatAm", inflation: 4.4, rate: 14.25, temp: "Hot", bias: "Restrictive / easing slow", pressure: 78, watch: "Fiscal risk, currency, expectations" },
       { market: "Mexico", region: "LatAm", inflation: 4.7, rate: 6.50, temp: "Warm", bias: "Restrictive hold", pressure: 67, watch: "Peso, services inflation, Banxico tone" },
       { market: "Nigeria", region: "Africa", inflation: 33.2, rate: 26.50, temp: "Hot", bias: "Hawkish / credibility", pressure: 92, watch: "FX liquidity, food CPI, reserves" },
@@ -646,6 +671,9 @@
       { market: "Cote d'Ivoire", region: "Africa", inflation: 3.5, rate: 3.25, temp: "Neutral", bias: "Regional hold", pressure: 43, watch: "WAEMU policy, cocoa, fiscal path" },
       { market: "Rwanda", region: "Africa", inflation: 1.8, rate: 8.25, temp: "Warm", bias: "Restrictive", pressure: 55, watch: "Food, currency, credit growth" }
     ];
+
+    const euroMemberSeeds = ["Austria","Belgium","Croatia","Cyprus","Estonia","Finland","France","Germany","Greece","Ireland","Italy","Latvia","Lithuania","Luxembourg","Malta","Netherlands","Portugal","Slovakia","Slovenia","Spain"].map(market => ({ market, region:"Euro Area", inflation:null, rate:2.40, temp:"Neutral", bias:"ECB-linked hold", pressure:50, watch:"National HICP, growth and ECB transmission", euroMember:true }));
+    markets.splice(4, 0, ...euroMemberSeeds);
 
     const templateIndicators = [{"currency":"AUD","market":"Australia","cpi":{"previous":3.7,"current":4.6,"forecast":4.9,"change":0.8999999999999995},"gdp":{"previous":2.1,"current":2.6,"forecast":2,"change":0.5},"man_pmi":{"previous":49.8,"current":51.3,"forecast":50,"change":3.0120481927710845},"serv_pmi":{"previous":46.3,"current":50.7,"forecast":49,"change":9.503239740820748},"unemp":{"previous":4.3,"current":4.3,"forecast":4.4,"change":0},"bus_conf":{"previous":4,"current":-29,"forecast":-34,"change":-825}},{"currency":"CAD","market":"Canada","cpi":{"previous":1.8,"current":2.4,"forecast":2.8,"change":0.5999999999999999},"gdp":{"previous":1.6,"current":0.7,"forecast":1.3,"change":-0.9000000000000001},"man_pmi":{"previous":50,"current":53.3,"forecast":50.1,"change":6.599999999999994},"serv_pmi":{"previous":47.2,"current":49.2,"forecast":50.3,"change":4.23728813559322},"unemp":{"previous":6.7,"current":6.9,"forecast":7,"change":0.20000000000000018},"bus_conf":{"previous":49.7,"current":57.7,"forecast":50,"change":16.096579476861166}},{"currency":"CHF","market":"Switzerland","cpi":{"previous":0.3,"current":0.6,"forecast":1,"change":0.3},"gdp":{"previous":0.9,"current":0.8,"forecast":1.2,"change":-0.09999999999999998},"man_pmi":{"previous":53.3,"current":54.5,"forecast":48.8,"change":2.2514071294559157},"serv_pmi":{"previous":57.2,"current":54.8,"forecast":51.5,"change":-4.195804195804206},"unemp":{"previous":3.1,"current":3,"forecast":2.9,"change":-0.10000000000000009},"bus_conf":{"previous":96,"current":98,"forecast":101,"change":2.083333333333333}},{"currency":"EUR","market":"Euro Area","cpi":{"previous":2.6,"current":3,"forecast":3,"change":0.3999999999999999},"gdp":{"previous":1.2,"current":0.8,"forecast":1.1,"change":-0.3999999999999999},"man_pmi":{"previous":51.6,"current":52.2,"forecast":52.3,"change":1.1627906976744213},"serv_pmi":{"previous":50.2,"current":47.6,"forecast":46,"change":-5.179282868525899},"unemp":{"previous":6.3,"current":6.2,"forecast":6.2,"change":-0.09999999999999964},"bus_conf":{"previous":-0.27,"current":-0.28,"forecast":-0.7,"change":-3.703703703703707}},{"currency":"GBP","market":"United Kingdom","cpi":{"previous":3,"current":3.3,"forecast":3.6,"change":0.2999999999999998},"gdp":{"previous":1.3,"current":1,"forecast":1.6,"change":-0.30000000000000004},"man_pmi":{"previous":51,"current":53.7,"forecast":51.3,"change":5.294117647058829},"serv_pmi":{"previous":50.5,"current":52.7,"forecast":51.9,"change":4.356435643564362},"unemp":{"previous":5.2,"current":4.9,"forecast":5.2,"change":-0.2999999999999998},"bus_conf":{"previous":-19,"current":-65,"forecast":-20,"change":-242.10526315789474}},{"currency":"JPY","market":"Japan","cpi":{"previous":1.3,"current":1.5,"forecast":2.2,"change":0.19999999999999996},"gdp":{"previous":0.6,"current":0.1,"forecast":-0.5,"change":-0.5},"man_pmi":{"previous":51.6,"current":55.1,"forecast":50.8,"change":6.782945736434108},"serv_pmi":{"previous":53.4,"current":51,"forecast":51.3,"change":-4.494382022471908},"unemp":{"previous":2.6,"current":2.7,"forecast":2.7,"change":0.10000000000000009},"bus_conf":{"previous":16,"current":17,"forecast":13,"change":6.25}},{"currency":"NZD","market":"New Zealand","cpi":{"previous":3.1,"current":3.1,"forecast":4.5,"change":0},"gdp":{"previous":1.1,"current":1.3,"forecast":1.2,"change":0.19999999999999996},"man_pmi":{"previous":54.8,"current":53.2,"forecast":51.3,"change":-2.91970802919707},"serv_pmi":{"previous":47.6,"current":46,"forecast":51,"change":-3.3613445378151288},"unemp":{"previous":5.4,"current":5.3,"forecast":5.5,"change":-0.10000000000000053},"bus_conf":{"previous":32.5,"current":-10.6,"forecast":32,"change":-132.6153846153846}},{"currency":"USD","market":"United States","cpi":{"previous":2.4,"current":3.3,"forecast":3.9,"change":0.8999999999999999},"gdp":{"previous":0.5,"current":2,"forecast":1.1,"change":1.5},"man_pmi":{"previous":52.3,"current":54.5,"forecast":51.3,"change":4.20650095602295},"serv_pmi":{"previous":49.8,"current":51,"forecast":50.4,"change":2.409638554216873},"unemp":{"previous":4.4,"current":4.3,"forecast":4.6,"change":-0.10000000000000053},"bus_conf":{"previous":52.7,"current":52.7,"forecast":51,"change":0}}];
 

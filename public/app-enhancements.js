@@ -1,9 +1,9 @@
 (() => {
   const flags = {
-    "United Kingdom":"🇬🇧","United States":"🇺🇸","Euro Area":"🇪🇺",Japan:"🇯🇵",China:"🇨🇳",India:"🇮🇳","South Korea":"🇰🇷",Taiwan:"🇹🇼",Singapore:"🇸🇬","Hong Kong":"🇭🇰",Australia:"🇦🇺",Canada:"🇨🇦",Brazil:"🇧🇷",Mexico:"🇲🇽",Nigeria:"🇳🇬","South Africa":"🇿🇦",Egypt:"🇪🇬",Kenya:"🇰🇪",Ghana:"🇬🇭",Morocco:"🇲🇦",Angola:"🇦🇴",Ethiopia:"🇪🇹","Cote d'Ivoire":"🇨🇮",Rwanda:"🇷🇼"
+    "United Kingdom":"🇬🇧","United States":"🇺🇸","Euro Area":"🇪🇺",Bulgaria:"🇧🇬",Austria:"🇦🇹",Belgium:"🇧🇪",Croatia:"🇭🇷",Cyprus:"🇨🇾",Estonia:"🇪🇪",Finland:"🇫🇮",France:"🇫🇷",Germany:"🇩🇪",Greece:"🇬🇷",Ireland:"🇮🇪",Italy:"🇮🇹",Latvia:"🇱🇻",Lithuania:"🇱🇹",Luxembourg:"🇱🇺",Malta:"🇲🇹",Netherlands:"🇳🇱",Portugal:"🇵🇹",Slovakia:"🇸🇰",Slovenia:"🇸🇮",Spain:"🇪🇸",Japan:"🇯🇵",China:"🇨🇳",India:"🇮🇳","South Korea":"🇰🇷",Taiwan:"🇹🇼",Singapore:"🇸🇬","Hong Kong":"🇭🇰",Australia:"🇦🇺",Canada:"🇨🇦",Brazil:"🇧🇷",Mexico:"🇲🇽",Nigeria:"🇳🇬","South Africa":"🇿🇦",Egypt:"🇪🇬",Kenya:"🇰🇪",Ghana:"🇬🇭",Morocco:"🇲🇦",Angola:"🇦🇴",Ethiopia:"🇪🇹","Cote d'Ivoire":"🇨🇮",Rwanda:"🇷🇼"
   };
   const countryCodes = {
-    "United Kingdom":"united-kingdom","United States":"united-states","Euro Area":"euro-area",Japan:"japan",China:"china",India:"india","South Korea":"south-korea",Taiwan:"taiwan",Singapore:"singapore","Hong Kong":"hong-kong",Australia:"australia",Canada:"canada",Brazil:"brazil",Mexico:"mexico",Nigeria:"nigeria","South Africa":"south-africa",Egypt:"egypt",Kenya:"kenya",Ghana:"ghana",Morocco:"morocco",Angola:"angola",Ethiopia:"ethiopia","Cote d'Ivoire":"cote-d-ivoire",Rwanda:"rwanda"
+    "United Kingdom":"united-kingdom","United States":"united-states","Euro Area":"euro-area",Bulgaria:"bulgaria",Austria:"austria",Belgium:"belgium",Croatia:"croatia",Cyprus:"cyprus",Estonia:"estonia",Finland:"finland",France:"france",Germany:"germany",Greece:"greece",Ireland:"ireland",Italy:"italy",Latvia:"latvia",Lithuania:"lithuania",Luxembourg:"luxembourg",Malta:"malta",Netherlands:"netherlands",Portugal:"portugal",Slovakia:"slovakia",Slovenia:"slovenia",Spain:"spain",Japan:"japan",China:"china",India:"india","South Korea":"south-korea",Taiwan:"taiwan",Singapore:"singapore","Hong Kong":"hong-kong",Australia:"australia",Canada:"canada",Brazil:"brazil",Mexico:"mexico",Nigeria:"nigeria","South Africa":"south-africa",Egypt:"egypt",Kenya:"kenya",Ghana:"ghana",Morocco:"morocco",Angola:"angola",Ethiopia:"ethiopia","Cote d'Ivoire":"cote-d-ivoire",Rwanda:"rwanda"
   };
   const leaderPortraits = {
     "United States": { name:"Donald Trump", role:"President", image:"https://commons.wikimedia.org/wiki/Special:FilePath/Donald_Trump_official_portrait.jpg" },
@@ -27,12 +27,23 @@
   let calendarPage = 0;
   let historyRange = "25";
   let historyPayload = null;
+  const tradeImages = { entry:"", management:"", exit:"" };
+  const countrySymbols = {"United Kingdom":"GBPUSD=X","United States":"DX-Y.NYB","Euro Area":"EURUSD=X",Bulgaria:"EURUSD=X",Japan:"JPY=X",China:"CNY=X",India:"INR=X","South Korea":"KRW=X",Australia:"AUDUSD=X",Canada:"CAD=X",Brazil:"BRL=X",Mexico:"MXN=X",Nigeria:"NGN=X","South Africa":"ZAR=X",Egypt:"EGP=X",Kenya:"KES=X",Ghana:"GHS=X",Morocco:"MAD=X",Angola:"AOA=X",Ethiopia:"ETB=X"};
+  markets.filter(row=>row.region==="Euro Area").forEach(row=>{ countrySymbols[row.market]="EURUSD=X"; });
 
   const pct = value => value == null ? "n/a" : `${Number(value).toFixed(2).replace(/\.00$/, "")}%`;
   const number = (value, digits = 2) => value == null ? "n/a" : Number(value).toLocaleString("en-GB", { maximumFractionDigits: digits });
-  const realRateFor = row => row.rate == null ? null : row.rate - row.inflation;
+  const realRateFor = row => row.rate == null || row.inflation == null ? null : row.rate - row.inflation;
   const latestIndicator = name => templateIndicators.find(item => item.market === name);
   const sourceQuery = name => encodeURIComponent(`${name} economy inflation central bank`);
+  const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+  function countryPrice(row) {
+    const symbol = countrySymbols[row.market];
+    const current = (live.markets || []).find(item => item.symbol === symbol && !item.unavailable);
+    if (current) return { ...current, value:current.price, current:true };
+    const fallback = (hosted.assets || []).find(item => item.symbol === symbol);
+    return fallback ? { ...fallback, value:fallback.close, marketTime:fallback.date, current:false } : null;
+  }
 
   function interpretation(row) {
     const real = realRateFor(row);
@@ -68,12 +79,14 @@
     const grid = document.getElementById("country-grid");
     const select = document.getElementById("country-select");
     const overviewSelect = document.getElementById("overview-country-select");
-    grid.innerHTML = markets.map(row => `
+    const card = row => `
       <a class="country-card" href="/countries/${countryCodes[row.market] || row.market.toLowerCase().replaceAll(" ", "-")}">
         <div class="country-card-top"><span class="flag" aria-hidden="true">${flags[row.market] || "🌍"}</span><span class="badge ${badgeClass(row.temp)}">${row.temp}</span></div>
         <h3>${row.market}</h3><p>${row.bias} · ${row.watch}</p>
         <div class="country-mini-metrics"><span>Inflation<strong>${pct(row.inflation)}</strong></span><span>Policy rate<strong>${pct(row.rate)}</strong></span><span>Pressure<strong>${row.pressure}/100</strong></span></div>
-      </a>`).join("");
+      </a>`;
+    const groups = [["G7","G7 economies",markets.filter(row=>row.region==="G7")],["Euro Area","Euro Area · EA21",markets.filter(row=>row.region==="Euro Area")],["Asia","Asia-Pacific",markets.filter(row=>["Asia","UK & G7"].includes(row.region))],["LatAm","Latin America",markets.filter(row=>row.region==="LatAm")],["Africa","Africa",markets.filter(row=>row.region==="Africa")]];
+    grid.innerHTML = groups.filter(([, ,rows])=>rows.length).map(([key,label,rows])=>`<section class="country-group ${key==="Euro Area"?"euro-group":""}"><div class="country-group-head"><div><span class="eyebrow">${key==="Euro Area"?"MONETARY UNION":"REGION"}</span><h3>${label}</h3></div>${key==="Euro Area"?"<p>The aggregate shows the shared ECB stance; member profiles show national inflation, growth and transmission differences. Bulgaria joined on 1 January 2026.</p>":""}</div><div class="country-grid-inner">${rows.map(card).join("")}</div></section>`).join("");
     select.innerHTML = `<option value="">Choose country…</option>${markets.map(row => `<option value="${encodeURIComponent(row.market)}">${flags[row.market] || "🌍"} ${row.market}</option>`).join("")}`;
     select.addEventListener("change", event => { if (event.target.value) location.href = `/countries/${countryCodes[decodeURIComponent(event.target.value)] || "united-kingdom"}`; });
     overviewSelect.innerHTML = select.innerHTML;
@@ -111,20 +124,29 @@
     return `<section class="country-brief"><div class="country-brief-copy"><span class="eyebrow">MOST RECENT CONTEXT</span><h3>What has changed and why it matters</h3><p>${interpretation(row)}</p><div class="brief-links">${links}</div></div><aside class="need-to-know">${portrait ? `<img src="${portrait.image}" alt="${portrait.name}, ${portrait.role} of ${row.market}" loading="lazy"><strong>${portrait.name}</strong><small>${portrait.role}</small>` : `<span class="brief-flag">${flags[row.market] || "🌍"}</span><strong>${row.market}</strong><small>Country briefing</small>`}<h4>Need to know</h4><ul><li><b>Inflation:</b> ${pct(row.inflation)} and the main driver of the rate outlook.</li><li><b>Policy:</b> ${row.bias}.</li><li><b>Watch:</b> ${row.watch}.</li></ul></aside></section>`;
   }
 
+  function countryNewsHtml(row) {
+    const terms = [row.market.toLowerCase(), ...(row.watch.toLowerCase().match(/[a-z]{4,}/g) || [])];
+    const all = hosted.news || [], relevant = all.filter(item => terms.some(term => item.title?.toLowerCase().includes(term)));
+    const items = [...relevant, ...all.filter(item => !relevant.includes(item))].slice(0,10);
+    return `<section class="country-news-panel"><div class="card-title-row"><div><span class="eyebrow">NEWS &amp; CATALYSTS</span><h3>${row.market} and global macro watch</h3></div><small>Maximum 10 · newest available feed</small></div><ol class="country-news-list">${items.map(item=>`<li><a href="${item.url}" target="_blank" rel="noopener"><span>${item.source || "Source"}${item.publishedAt?` · ${new Date(item.publishedAt).toLocaleDateString("en-GB",{day:"2-digit",month:"short"})}`:""}</span><strong>${item.title}</strong><small>${whyItMatters(item.title)}</small></a></li>`).join("") || `<li><a href="https://www.reuters.com/site-search/?query=${sourceQuery(row.market)}" target="_blank" rel="noopener"><strong>Open the latest Reuters search for ${row.market}</strong></a></li>`}</ol></section>`;
+  }
+
   function renderCountry(name) {
     const row = markets.find(item => item.market === name) || markets[0];
     const real = realRateFor(row);
     const gini = giniData[row.market];
+    const quote = countryPrice(row);
     const teSlug = countryCodes[row.market] || row.market.toLowerCase().replaceAll(" ", "-");
     document.getElementById("country-profile").innerHTML = `
       <div class="profile-hero">
         <div class="profile-title"><span class="flag" aria-hidden="true">${flags[row.market] || "🌍"}</span><div><span class="eyebrow">${row.region.toUpperCase()}</span><h2>${row.market}</h2><p>${row.bias} · Last dashboard refresh ${hosted.date || "pending"}</p></div></div>
         <div class="pressure-dial" style="--score:${row.pressure}"><div><strong>${row.pressure}</strong><span>PRESSURE / 100</span></div></div>
       </div>
+      <section class="country-live-price"><div><span class="eyebrow">CURRENT MARKET REFERENCE</span><h3>${quote ? `${quote.asset} · ${number(quote.value,quote.value>100?2:5)}` : "No direct free FX quote mapped"}</h3><p>${quote ? `${quote.symbol} · ${quote.convention} · ${quote.current?"5-minute cache":"latest hosted fallback"}` : "Verify a tradable instrument on the markets page."}</p></div>${quote?`<div class="quote-meta"><span class="badge ${(quote.changePct||0)>0?"up":(quote.changePct||0)<0?"down":"flat"}">${quote.changePct==null?"Latest":`${quote.changePct>=0?"+":""}${number(quote.changePct)}%`}</span><small>${new Date(quote.marketTime || live.generatedAt || hosted.generatedAt).toLocaleString("en-GB",{dateStyle:"medium",timeStyle:"short"})}</small></div>`:""}<a href="/markets">Open price tape →</a></section>
       ${recentBriefHtml(row)}
       <div class="profile-grid">
         <div class="insight-card"><h3>Macro snapshot</h3><div class="profile-metrics">
-          <div class="profile-metric"><span>INFLATION</span><strong>${pct(row.inflation)}</strong><small>Annual CPI baseline</small></div>
+          <div class="profile-metric"><span>INFLATION</span><strong>${pct(row.inflation)}</strong><small>${row.inflationSource || "Annual CPI baseline"}${row.inflationPeriod?` · ${row.inflationPeriod}`:""}</small></div>
           <div class="profile-metric"><span>POLICY RATE</span><strong>${pct(row.rate)}</strong><small>${row.rate == null ? "FX framework" : "Listed policy rate"}</small></div>
           <div class="profile-metric"><span>REAL RATE</span><strong>${pct(real)}</strong><small>Policy minus inflation</small></div>
           <div class="profile-metric"><span>GINI</span><strong>${gini ? number(gini.value,1) : "n/a"}</strong><small>${gini ? `World Bank ${gini.year}` : "Not mapped"}</small></div>
@@ -138,6 +160,8 @@
         </div></div>
         <div class="insight-card"><div class="card-title-row"><h3>Latest mapped releases</h3><a href="/countries/${teSlug}/history">Historical data →</a></div>${releaseRows(row.market)}<div class="history-link-grid">${[["Inflation","inflation"],["GDP growth","gdp"],["Unemployment","unemployment"],["Inequality","gini"]].map(([label,key])=>`<a href="/countries/${teSlug}/history?indicator=${key}"><span>${label}</span><small>25 observations · interactive chart →</small></a>`).join("")}</div></div>
         <div class="insight-card"><h3>Decision checklist</h3><div class="note-list" style="padding:0"><div class="note red"><strong>Primary risk</strong><span>${row.watch}</span></div><div class="note amber"><strong>Policy signal</strong><span>${row.bias}</span></div><div class="note green"><strong>What changes the view</strong><span>A material inflation surprise, a central-bank communication shift, or a sharp currency move.</span></div></div></div>
+        <div class="insight-card macro-meat"><h3>Macro transmission</h3><div><p><b>Households:</b> ${row.inflation>4?"Inflation is squeezing spending power and increasing rate sensitivity.":"Price pressure is comparatively contained, so growth matters more."}</p><p><b>Currency:</b> ${real==null?"Monetary conditions use a non-standard framework.":`Real policy rate ${pct(real)}; compare this with the opposing currency.`}</p><p><b>Companies:</b> Watch margins, financing costs, demand and currency translation.</p><p><b>Next catalyst:</b> ${row.watch}.</p></div></div>
+        ${countryNewsHtml(row)}
       </div><section class="country-companies"><div class="card-title-row"><div><span class="eyebrow">COUNTRY BELLWETHERS</span><h3>Five companies carrying the macro signal</h3></div><a href="/companies?country=${encodeURIComponent(row.market)}">Open company hub →</a></div><div class="country-company-strip">${companyUniverse.filter(company=>company.country===row.market).slice(0,5).map(company=>`<a href="/companies/${company.id}"><img src="https://www.google.com/s2/favicons?domain=${company.domain}&sz=64" alt=""><span><strong>${company.name}</strong><small>${company.sector}${company.symbol?` · ${company.symbol}`:" · price feed not available"}</small></span></a>`).join("") || `<div class="empty-state">Loading country companies…</div>`}</div></section><div id="pair-pressure" class="comparison-mount"></div><div id="country-comparison" class="comparison-mount"></div>`;
     renderPairPressure("pair-pressure", row.market);
     renderComparison("country-comparison", [row.market,"United States","China"]);
@@ -382,6 +406,41 @@
     ctx.fillStyle="#65706b";ctx.font="12px sans-serif";ctx.fillText(number(max,4),4,pad.y+4);ctx.fillText(number(min,4),4,canvas.height-pad.y+4);
   }
 
+  const tradeValue = id => document.getElementById(id)?.value || "";
+  function bindTradeSheet() {
+    if (document.getElementById("trade-autofill")?.dataset.bound) return;
+    const today = new Date();
+    document.getElementById("trade-date").value ||= today.toISOString().slice(0,10);
+    document.getElementById("trade-time").value ||= today.toTimeString().slice(0,5);
+    document.getElementById("trade-autofill").onclick = fillTradeSheet;
+    document.getElementById("trade-print").onclick = () => { const frame=document.createElement("iframe");frame.style.display="none";document.body.appendChild(frame);frame.contentDocument.open();frame.contentDocument.write(tradeSheetDocumentLat());frame.contentDocument.close();setTimeout(()=>{frame.contentWindow.focus();frame.contentWindow.print();setTimeout(()=>frame.remove(),1000)},250); };
+    document.getElementById("trade-download").onclick = () => { const blob=new Blob([tradeSheetDocumentLat()],{type:"application/msword"});const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=`LAT-Trade-Sheet-${tradeValue("plan-asset")||"setup"}-${tradeValue("trade-date")||"draft"}.doc`;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000); };
+    [["entry","trade-image-entry"],["management","trade-image-management"],["exit","trade-image-exit"]].forEach(([key,id])=>document.getElementById(id).onchange=event=>{const file=event.target.files?.[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{tradeImages[key]=reader.result;document.getElementById(`trade-preview-${key}`).innerHTML=`<img src="${reader.result}" alt="${key} chart preview">`;};reader.readAsDataURL(file)});
+    document.getElementById("trade-autofill").dataset.bound="true";
+  }
+
+  function fillTradeSheet() {
+    const item=(live.markets||[]).find(row=>row.symbol===tradeValue("plan-asset"))||live.markets?.[0];
+    const country=markets.find(row=>row.market===decodeURIComponent(tradeValue("plan-country")))||markets[0], direction=tradeValue("plan-direction"), real=realRateFor(country);
+    document.getElementById("trade-entry").value=item?.price||"";
+    document.getElementById("trade-macro-logic").value=`${country.market} is in a ${country.temp.toLowerCase()} regime: inflation ${pct(country.inflation)}, policy rate ${pct(country.rate)} and real rate ${pct(real)}. Policy bias is ${country.bias.toLowerCase()}. The principal catalyst is ${country.watch.toLowerCase()}. This gives a ${direction.toLowerCase()} setup in ${item?.symbol||"the selected asset"} only if the opposing currency has weaker relative fundamentals and price confirms the view. Invalidate the macro thesis if inflation, central-bank guidance or the relative growth/rate advantage reverses.`;
+    document.getElementById("trade-fundamental").value=`${interpretation(country)} Current macro pressure is ${country.pressure}/100. Review the economic calendar and latest country news before entry.`;
+    const bb=item?.technical?.bollinger, stoch=item?.technical?.stochastic;
+    document.getElementById("trade-technical").value=`Bollinger position: ${bb?.position||"confirm manually"}; middle ${number(bb?.middle,5)}, upper ${number(bb?.upper,5)}, lower ${number(bb?.lower,5)}. Stochastic: ${stoch?.state||"confirm manually"} (%K ${number(stoch?.k,1)}, %D ${number(stoch?.d,1)}). Point score: ${document.getElementById("point-total").textContent}.`;
+    document.getElementById("trade-trigger").value ||= `${direction} only after price action confirms the macro direction at the planned level.`;
+  }
+
+  function tradeSheetDocument() {
+    const field=(label,id)=>`<tr><th>${label}</th><td>${escapeHtml(tradeValue(id)).replace(/\n/g,"<br>")||"&nbsp;"}</td></tr>`;
+    const image=key=>tradeImages[key]?`<img class="chart" src="${tradeImages[key]}">`:`<div class="placeholder">Insert ${key} chart</div>`;
+    return `<!doctype html><html><head><meta charset="utf-8"><title>LAT Individual Trade Sheet</title><style>@page{size:A4;margin:12mm}body{font:11pt Arial;color:#111}h1{text-align:center;font-size:20pt}h2{font-size:13pt;color:#fff;background:#128067;padding:7px;margin:16px 0 6px}.exit{background:#bd3f45}table{width:100%;border-collapse:collapse;margin-bottom:8px}th,td{border:1px solid #bfc8c3;padding:7px;vertical-align:top}th{width:27%;background:#edf3f0;text-align:left}.macro th{background:#dcece5}.chart{width:100%;max-height:360px;object-fit:contain}.placeholder{height:170px;border:1px dashed #9aa49f;display:flex;align-items:center;justify-content:center;color:#68736d}.meta{display:grid;grid-template-columns:1fr 1fr;gap:6px}.small{font-size:9pt;color:#59635e}</style></head><body><h1>Individual Trade Sheet</h1><p><b>Name:</b> ${escapeHtml(tradeValue("trade-name"))}</p><h2>Trade Entry</h2><table>${field("Asset", "plan-asset")}${field("Direction","plan-direction")}${field("Date","trade-date")}${field("Time","trade-time")}${field("Chart period","trade-chart-period")}${field("Expected duration","trade-duration")}${field("Lot size","trade-lot")}${field("Entry price","trade-entry")}${field("Stop loss","trade-stop")}${field("Target","trade-target")}${field("Initial risk","trade-risk")}${field("Initial reward","trade-reward")}${field("Initial RRR","trade-rrr")}</table><h2>Macro Logic</h2><table class="macro">${field("Country → relative view → trade → invalidation","trade-macro-logic")}</table><table>${field("Set-up (fundamental)","trade-fundamental")}${field("Set-up (technical)","trade-technical")}${field("Trigger","trade-trigger")}${field("Execution","trade-execution")}${field("Reason for stop loss","trade-stop-reason")}${field("Reason for target","trade-target-reason")}</table>${image("entry")}<h2>In-trade Management</h2><table>${field("Management notes","trade-management")}</table>${image("management")}<h2 class="exit">Trade Exit</h2><table>${field("Reason for exit / lessons learned","trade-lessons")}</table>${image("exit")}<p class="small">Generated from the ABMOTH dashboard. Prices are indicative; verify all data before execution.</p></body></html>`;
+  }
+
+  function tradeSheetDocumentLat() {
+    const value=id=>escapeHtml(tradeValue(id)).replace(/\n/g,"<br>")||"&nbsp;", field=(label,id,kind="entry")=>`<tr class="${kind}"><th>${label}</th><td>${value(id)}</td></tr>`, image=key=>tradeImages[key]?`<img class="chart" src="${tradeImages[key]}">`:`<div class="placeholder">[Insert ${key} chart picture here]</div>`;
+    return `<!doctype html><html><head><meta charset="utf-8"><title>LAT Individual Trade Sheet</title><style>@page{size:A4;margin:14mm}body{font:10.5pt Arial;color:#111}h1{font-size:20pt;border-bottom:1px solid #222;padding-bottom:7px}h2{font-size:14pt;margin:18px 0 8px}.page{page-break-after:always}.page:last-child{page-break-after:auto}table{width:100%;border-collapse:collapse;margin:8px 0 14px}th,td{border:1px solid #222;padding:6px;vertical-align:middle}th{background:#fff;text-align:left}.entry td{background:#c8ff91}.macro td{background:#e5f7d3}.exit td{background:#e4b6b6}.grid th,.grid td{text-align:center}.chart{display:block;width:100%;max-height:330px;object-fit:contain}.placeholder{height:145px;color:#e22;font-style:italic;padding-top:10px}.footer{margin-top:18px;border-top:1px solid #234477;color:#234477;text-align:right;letter-spacing:3px;padding-top:5px}</style></head><body><section class="page"><h1>Individual Trade Sheet</h1><p><b>Name:</b> ${value("trade-name")}</p><h2>Trade Entry</h2><table>${field("Chart Period","trade-chart-period")}${field("Expected Trade Duration","trade-duration")}${field("Initial Risk","trade-risk")}${field("Initial Reward","trade-reward")}${field("Initial RRR","trade-rrr")}</table><table class="grid"><tr><th>Date</th><th>Time</th><th>B/S</th><th>Asset</th><th>Lot Size</th><th>Price</th><th>Stop Loss</th><th>Target</th></tr><tr class="entry"><td>${value("trade-date")}</td><td>${value("trade-time")}</td><td>${value("plan-direction")}</td><td>${value("plan-asset")}</td><td>${value("trade-lot")}</td><td>${value("trade-entry")}</td><td>${value("trade-stop")}</td><td>${value("trade-target")}</td></tr></table><table>${field("Macro logic","trade-macro-logic","macro")}${field("Set-up (fundamental)","trade-fundamental")}${field("Set-up (technical)","trade-technical")}${field("Trigger","trade-trigger")}${field("Execution","trade-execution")}${field("Reason for Stop Loss placement","trade-stop-reason")}${field("Reason for Target Limit placement","trade-target-reason")}</table>${image("entry")}<h2>In-trade Management:</h2><p>${value("trade-management")}</p>${image("management")}<div class="footer">LAT Trade Template</div></section><section><h2>Trade Exit</h2><p>If you exit the trade in separate steps, break the overall trade down into smaller trades and record each one.</p><table>${field("Actual Trade Duration (hours)","trade-actual-duration","exit")}</table><table class="grid"><tr><th>Date</th><th>Time</th><th>B/S</th><th>Asset</th><th>Lot Size</th><th>Entry Price</th><th>Exit Price</th><th>Pips</th><th>£</th></tr><tr class="exit"><td>${value("trade-exit-date")}</td><td>${value("trade-exit-time")}</td><td>${value("plan-direction")}</td><td>${value("plan-asset")}</td><td>${value("trade-lot")}</td><td>${value("trade-entry")}</td><td>${value("trade-exit-price")}</td><td>${value("trade-pips")}</td><td>${value("trade-pnl")}</td></tr><tr class="exit"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr class="exit"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr></table><table>${field("Reason for Exit","trade-exit-reason","exit")}${field("Lessons learned","trade-lessons","exit")}</table>${image("exit")}<div class="footer">LAT Trade Template</div></section></body></html>`;
+  }
+
   function renderTradingPlan() {
     const assetSelect = document.getElementById("plan-asset");
     const countrySelect = document.getElementById("plan-country");
@@ -426,6 +485,7 @@
     const change=document.getElementById("plan-change");change.textContent=item?`${item.changePct>=0?"+":""}${number(item.changePct)}%`:"—";change.className=`badge ${!item||Math.abs(item.changePct||0)<.01?"flat":item.changePct>0?"up":"down"}`;
     document.getElementById("plan-refresh").textContent=live.generatedAt?`Live ${new Date(live.generatedAt).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}`:"Hosted fallback";
     drawPlanChart(item);
+    bindTradeSheet();
   }
 
   function whyItMatters(title) {
@@ -474,6 +534,11 @@
     } catch {
       document.getElementById("company-refresh").textContent = "Hosted fallback";
     }
+    try {
+      const euroResponse=await fetch(`/api/euro-area?ts=${Date.now()}`,{cache:"no-store"});
+      if(euroResponse.ok){const euro=await euroResponse.json();euro.rows.forEach(item=>{const row=markets.find(market=>market.market===item.market);if(row&&Number.isFinite(item.inflation)){row.inflation=item.inflation;row.inflationSource="Eurostat HICP";row.inflationPeriod=item.period;row.temp=item.inflation>=5?"Hot":item.inflation>=2.5?"Warm":item.inflation<1?"Cool":"Neutral";row.pressure=Math.round(Math.max(25,Math.min(90,42+item.inflation*5)));}});}
+    } catch {}
+    renderCountryGrid();
     renderMarkets(); renderNews(); renderLandingNews(); renderFullCalendar(); renderCompanies(); renderTradingPlan(); renderOverview(); route();
   }
 
