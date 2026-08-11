@@ -2,6 +2,8 @@ const countries = {
   "united-kingdom": { name: "United Kingdom", iso: "GBR", fred: "GBRCPIALLMINMEI" },
   "united-states": { name: "United States", iso: "USA", fred: "CPIAUCSL" },
   "euro-area": { name: "Euro Area", iso: "EMU", fred: "CP0000EZ19M086NEST" },
+  bulgaria: { name: "Bulgaria", iso: "BGR" },
+  austria:{name:"Austria",iso:"AUT"},belgium:{name:"Belgium",iso:"BEL"},croatia:{name:"Croatia",iso:"HRV"},cyprus:{name:"Cyprus",iso:"CYP"},estonia:{name:"Estonia",iso:"EST"},finland:{name:"Finland",iso:"FIN"},france:{name:"France",iso:"FRA"},germany:{name:"Germany",iso:"DEU"},greece:{name:"Greece",iso:"GRC"},ireland:{name:"Ireland",iso:"IRL"},italy:{name:"Italy",iso:"ITA"},latvia:{name:"Latvia",iso:"LVA"},lithuania:{name:"Lithuania",iso:"LTU"},luxembourg:{name:"Luxembourg",iso:"LUX"},malta:{name:"Malta",iso:"MLT"},netherlands:{name:"Netherlands",iso:"NLD"},portugal:{name:"Portugal",iso:"PRT"},slovakia:{name:"Slovakia",iso:"SVK"},slovenia:{name:"Slovenia",iso:"SVN"},spain:{name:"Spain",iso:"ESP"},
   japan: { name: "Japan", iso: "JPN", fred: "JPNCPIALLMINMEI" }, china: { name: "China", iso: "CHN", fred: "CHNCPIALLMINMEI" },
   india: { name: "India", iso: "IND", fred: "INDCPIALLMINMEI" }, "south-korea": { name: "South Korea", iso: "KOR", fred: "KORCPIALLMINMEI" },
   taiwan: { name: "Taiwan", iso: "TWN", fred: "TWNPCPIPCPPPT", direct: true }, singapore: { name: "Singapore", iso: "SGP" }, "hong-kong": { name: "Hong Kong", iso: "HKG" },
@@ -21,7 +23,7 @@ function csvRows(csv) {
 }
 
 async function monthlyInflation(series) {
-  const response = await fetch(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=${series}`, { signal: AbortSignal.timeout(25000) });
+  const response = await fetch(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=${series}`, { signal: AbortSignal.timeout(9000) });
   if (!response.ok) throw new Error(`FRED ${response.status}`);
   const index = csvRows(await response.text());
   const byMonth = new Map(index.map(item => [item.date.slice(0, 7), item.value]));
@@ -34,14 +36,14 @@ async function monthlyInflation(series) {
 }
 
 async function directInflation(series) {
-  const response = await fetch(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=${series}`, { signal: AbortSignal.timeout(25000) });
+  const response = await fetch(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=${series}`, { signal: AbortSignal.timeout(9000) });
   if (!response.ok) throw new Error(`FRED ${response.status}`);
   const today = new Date().toISOString().slice(0, 10);
   return csvRows(await response.text()).filter(item => item.date <= today).slice(-25);
 }
 
 async function annualInflation(iso) {
-  const response = await fetch(`https://api.worldbank.org/v2/country/${iso}/indicator/FP.CPI.TOTL.ZG?format=json&per_page=70`, { signal: AbortSignal.timeout(25000) });
+  const response = await fetch(`https://api.worldbank.org/v2/country/${iso}/indicator/FP.CPI.TOTL.ZG?format=json&per_page=70`, { signal: AbortSignal.timeout(9000) });
   if (!response.ok) throw new Error(`World Bank ${response.status}`);
   const payload = await response.json();
   return (payload?.[1] || []).filter(item => Number.isFinite(item.value)).map(item => ({ date: `${item.date}-01-01`, value: item.value })).sort((a,b) => a.date.localeCompare(b.date)).slice(-25);
@@ -55,7 +57,7 @@ const historicalIndicators = {
 
 async function annualIndicator(iso, config) {
   const url = `https://api.worldbank.org/v2/country/${iso}/indicator/${config.indicator}?format=json&per_page=70`;
-  const result = await fetch(url, { signal: AbortSignal.timeout(25000) });
+  const result = await fetch(url, { signal: AbortSignal.timeout(9000) });
   if (!result.ok) throw new Error(`World Bank ${result.status}`);
   const payload = await result.json();
   return (payload?.[1] || []).filter(item => Number.isFinite(item.value)).map(item => ({ date: `${item.date}-01-01`, value: item.value })).sort((a,b) => a.date.localeCompare(b.date)).slice(-25);
