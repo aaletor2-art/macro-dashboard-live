@@ -1,198 +1,198 @@
 {
-  "date": "2026-08-10",
-  "filename": "macro_daily_export_2026-08-10.xlsx",
-  "href": "/daily_exports/macro_daily_export_2026-08-10.xlsx",
-  "generatedAt": "2026-08-10T17:03:39.213Z",
+  "date": "2026-08-11",
+  "filename": "macro_daily_export_2026-08-11.xlsx",
+  "href": "/daily_exports/macro_daily_export_2026-08-11.xlsx",
+  "generatedAt": "2026-08-11T17:08:20.070Z",
   "assets": [
     {
-      "date": "2026-08-10",
+      "date": "2026-08-11",
       "asset": "Australian Dollar",
       "symbol": "AUDUSD=X",
       "convention": "USD per 1 AUD",
-      "open": 0.7070635557174683,
-      "close": 0.7062645554542542,
-      "move": -0.0007990002632141113,
-      "pctMove": -0.0011300260871222045
+      "open": 0.7057162523269653,
+      "close": 0.7063643336296082,
+      "move": 0.0006480813026428223,
+      "pctMove": 0.0009183312705438595
     },
     {
-      "date": "2026-08-10",
+      "date": "2026-08-11",
       "asset": "Canadian Dollar",
       "symbol": "CAD=X",
       "convention": "USD per 1 CAD",
-      "open": 0.7174630402456645,
-      "close": 0.7176072117548339,
-      "move": 0.00014417150916934407,
-      "pctMove": 0.00020094625239508446
+      "open": 0.7175351494461446,
+      "close": 0.7185095211457152,
+      "move": 0.0009743716995705975,
+      "pctMove": 0.0013579428134256055
     },
     {
-      "date": "2026-08-10",
+      "date": "2026-08-11",
       "asset": "Swiss Franc",
       "symbol": "CHF=X",
       "convention": "USD per 1 CHF",
-      "open": 1.2394645392999837,
-      "close": 1.2349490270807135,
-      "move": -0.004515512219270157,
-      "pctMove": -0.0036431152938189992
+      "open": 1.2346745610640157,
+      "close": 1.232118899962663,
+      "move": -0.0025556611013526354,
+      "pctMove": -0.0020699066636233887
     },
     {
-      "date": "2026-08-10",
+      "date": "2026-08-11",
       "asset": "Euro",
       "symbol": "EURUSD=X",
       "convention": "USD per 1 EUR",
-      "open": 1.156738042831421,
-      "close": 1.155001163482666,
-      "move": -0.0017368793487548828,
-      "pctMove": -0.0015015321398986758
+      "open": 1.1546010971069336,
+      "close": 1.1542012691497803,
+      "move": -0.0003998279571533203,
+      "pctMove": -0.00034629099015681675
     },
     {
-      "date": "2026-08-10",
+      "date": "2026-08-11",
       "asset": "British Pound",
       "symbol": "GBPUSD=X",
       "convention": "USD per 1 GBP",
-      "open": 1.3492363691329956,
-      "close": 1.351387858390808,
-      "move": 0.0021514892578125,
-      "pctMove": 0.0015945977347133766
+      "open": 1.350694179534912,
+      "close": 1.3503295183181763,
+      "move": -0.00036466121673583984,
+      "pctMove": -0.00026998059387606244
     },
     {
-      "date": "2026-08-10",
+      "date": "2026-08-11",
       "asset": "Japanese Yen",
       "symbol": "JPY=X",
       "convention": "USD per 1 JPY",
-      "open": 0.006340068398363633,
-      "close": 0.006287172876052535,
-      "move": -0.00005289552231109787,
-      "pctMove": -0.008343052312298371
+      "open": 0.006280539116663104,
+      "close": 0.006278133699838803,
+      "move": -0.0000024054168243003646,
+      "pctMove": -0.0003829952778924284
     },
     {
-      "date": "2026-08-10",
+      "date": "2026-08-11",
       "asset": "New Zealand Dollar",
       "symbol": "NZDUSD=X",
       "convention": "USD per 1 NZD",
-      "open": 0.5895183682441711,
-      "close": 0.5887200832366943,
-      "move": -0.0007982850074768066,
-      "pctMove": -0.001354130847278645
+      "open": 0.5884429812431335,
+      "close": 0.588408350944519,
+      "move": -0.00003463029861450195,
+      "pctMove": -0.00005885072932865221
     },
     {
-      "date": "2026-08-10",
+      "date": "2026-08-11",
       "asset": "US Dollar Index",
       "symbol": "DX-Y.NYB",
       "convention": "Index points",
-      "open": 99.58899688720703,
-      "close": 99.74400329589844,
-      "move": 0.15500640869140625,
-      "pctMove": 0.0015564611908578385
+      "open": 99.8030014038086,
+      "close": 99.8280029296875,
+      "move": 0.02500152587890625,
+      "pctMove": 0.00025050875752463675
     },
     {
-      "date": "2026-08-10",
+      "date": "2026-08-11",
       "asset": "Gold",
       "symbol": "GC=F",
       "convention": "USD futures price",
-      "open": 4400,
-      "close": 4411.60009765625,
-      "move": 11.60009765625,
-      "pctMove": 0.002636385830965926
+      "open": 4446.89990234375,
+      "close": 4444,
+      "move": -2.89990234375,
+      "pctMove": -0.0006521177466175532
     },
     {
-      "date": "2026-08-10",
+      "date": "2026-08-11",
       "asset": "Silver",
       "symbol": "SI=F",
       "convention": "USD futures price",
-      "open": 63.79999923706055,
-      "close": 65.05000305175781,
-      "move": 1.2500038146972656,
-      "pctMove": 0.01959253651481485
+      "open": 65.94499969482422,
+      "close": 65.07499694824219,
+      "move": -0.8700027465820312,
+      "pctMove": -0.013192853902618373
     },
     {
-      "date": "2026-08-10",
+      "date": "2026-08-11",
       "asset": "WTI Crude",
       "symbol": "CL=F",
       "convention": "USD futures price",
-      "open": 78.41999816894531,
-      "close": 81.44000244140625,
-      "move": 3.0200042724609375,
-      "pctMove": 0.038510639415659575
+      "open": 82.3499984741211,
+      "close": 83.08000183105469,
+      "move": 0.7300033569335938,
+      "pctMove": 0.008864643235700909
     },
     {
-      "date": "2026-08-10",
+      "date": "2026-08-11",
       "asset": "Brent Crude",
       "symbol": "BZ=F",
       "convention": "USD futures price",
-      "open": 83.55999755859375,
-      "close": 87.01000213623047,
-      "move": 3.4500045776367188,
-      "pctMove": 0.04128775345185365
+      "open": 87.97000122070312,
+      "close": 88.61000061035156,
+      "move": 0.6399993896484375,
+      "pctMove": 0.007275200417955929
     },
     {
-      "date": "2026-08-10",
+      "date": "2026-08-11",
       "asset": "Natural Gas",
       "symbol": "NG=F",
       "convention": "USD futures price",
-      "open": 2.7090001106262207,
-      "close": 2.7799999713897705,
-      "move": 0.0709998607635498,
-      "pctMove": 0.02620888071766725
+      "open": 2.7780001163482666,
+      "close": 2.753999948501587,
+      "move": -0.024000167846679688,
+      "pctMove": -0.008639368913428425
     },
     {
-      "date": "2026-08-10",
+      "date": "2026-08-11",
       "asset": "Copper",
       "symbol": "HG=F",
       "convention": "USD futures price",
-      "open": 6.599999904632568,
-      "close": 6.612500190734863,
-      "move": 0.012500286102294922,
-      "pctMove": 0.001893982770139191
+      "open": 6.632999897003174,
+      "close": 6.632999897003174,
+      "move": 0,
+      "pctMove": 0
     },
     {
-      "date": "2026-08-10",
+      "date": "2026-08-11",
       "asset": "Corn",
       "symbol": "ZC=F",
       "convention": "USD futures price",
-      "open": 463.5,
-      "close": 461.5,
-      "move": -2,
-      "pctMove": -0.004314994606256728
+      "open": 461.75,
+      "close": 460.5,
+      "move": -1.25,
+      "pctMove": -0.002707092582566295
     },
     {
-      "date": "2026-08-10",
+      "date": "2026-08-11",
       "asset": "Wheat",
       "symbol": "ZW=F",
       "convention": "USD futures price",
-      "open": 643.5,
-      "close": 643,
-      "move": -0.5,
-      "pctMove": -0.0007770007770008247
+      "open": 639.5,
+      "close": 629.5,
+      "move": -10,
+      "pctMove": -0.015637216575449586
     },
     {
-      "date": "2026-08-10",
+      "date": "2026-08-11",
       "asset": "Soybeans",
       "symbol": "ZS=F",
       "convention": "USD futures price",
-      "open": 1177,
-      "close": 1180,
-      "move": 3,
-      "pctMove": 0.002548853016142827
+      "open": 1181,
+      "close": 1167.75,
+      "move": -13.25,
+      "pctMove": -0.01121930567315832
     },
     {
-      "date": "2026-08-10",
+      "date": "2026-08-11",
       "asset": "Coffee",
       "symbol": "KC=F",
       "convention": "USD futures price",
-      "open": 314.20001220703125,
-      "close": 333.75,
-      "move": 19.54998779296875,
-      "pctMove": 0.06222147369009945
+      "open": 314.54998779296875,
+      "close": 314.3999938964844,
+      "move": -0.149993896484375,
+      "pctMove": -0.00047685233605254673
     },
     {
-      "date": "2026-08-10",
+      "date": "2026-08-11",
       "asset": "Cocoa",
       "symbol": "CC=F",
       "convention": "USD futures price",
-      "open": 5816,
-      "close": 5942,
-      "move": 126,
-      "pctMove": 0.021664374140302645
+      "open": 5977,
+      "close": 5665,
+      "move": -312,
+      "pctMove": -0.05220010038480838
     }
   ],
   "calendarLines": [
@@ -248,21 +248,27 @@
   "news": [
     {
       "source": "Reuters",
-      "title": "Brazil cuts rates by 25 bps again, September rate cut in play",
+      "title": "BOJ's rate-hike path runs into Takaichi's bond market problems - reuters.com",
+      "url": "https://news.google.com/rss/articles/CBMitgFBVV95cUxQMVU4YTMyZzBlVkRSS1puYTluVjgycklHS2dRbnVCSkxVMWdjcEUtdlZ0NVpIakhpckplY0dGSGQyOFkxQmhpTnMzT0dRNWlfRHg5R2MzQ3BUcV90cTFjMlF5elB3SUVlMWloQnpleUowUHNHSFJKeW1iV2lkNnhtdGtWUURyQi1DcURaaG1SR18xa3lmd2MtaEsyb2E1Q082c25nX2E3UEYzV0JJcUQxOGNfMFZrdw?oc=5",
+      "publishedAt": "2026-08-10T23:08:35.000Z"
+    },
+    {
+      "source": "Reuters",
+      "title": "Market cuts odds of Fed hike after jobs data, but economists still see case for tightening - reuters.com",
+      "url": "https://news.google.com/rss/articles/CBMirAFBVV95cUxQc20xOTBqRG9tVV9IUnA4T1JoVHo1dUpfSV85UzZQdzFqeWZPZ0hFb3kzUVZDUTlUcS10b205dzIyWVRaWUpxUmJJa0EtR2tfQ0sxa0tsRl82SkFXMF9BRWFCSzJDSkRpb25EOW5Fd0hUUzdrMU4wMlRDZVNiQTVoazN4dHFpeUhfNjJaUkkyUnVtdWh4V2l0LXlVcWtzM1pqdmZHVnVCT3ZoT3o5?oc=5",
+      "publishedAt": "2026-08-07T18:11:39.000Z"
+    },
+    {
+      "source": "Reuters",
+      "title": "Brazil cuts rates by 25 bps again, September rate cut in play - reuters.com",
       "url": "https://news.google.com/rss/articles/CBMitgFBVV95cUxOcU5ZelBrN3dWTm4xVGk0ZzVIV1lhZVM3aHl1aGdseDFlb2NVSXY1YXZvQ1QwVHZwYVV1Z093MXc1Y2ZZdlY4WjhtZjFTWTFiWUhkamlKSHI0dDNUazNBOWFzTUVFT19IR1RpWWd3V0R1VGFxT29NcmNCaloydkUtVUZXNURKMG4zVjJiX213TGVKOEthbGxHV3dLekp2ZFBBWlpEOVlxYWxLVW11T2txYmE4bC1xZw?oc=5",
       "publishedAt": "2026-08-05T23:06:12.000Z"
     },
     {
       "source": "Reuters",
-      "title": "India's central bank holds rates, awaits clearer inflation signal before acting",
+      "title": "India's central bank holds rates, awaits clearer inflation signal before acting - reuters.com",
       "url": "https://news.google.com/rss/articles/CBMixAFBVV95cUxQaVh6a1FVeVF5VXFBMU5FU0ctdXFZWUZudWdoR1RSd2tGaTJENGNFcWkzQlFweDduUUpBTHVNWVJRdmlXZFlvUG1OYV9MaUtndEN3akxJWWZ4Ny1Jazl0M2p4VGdWNkNHNXZTcTdSTXQycVcxVGdNZmhHMUEyeUx1SE9LTjdUekg3MW9LcENxaEJoYS1vSXFDbDA0cmprREl2OTgzQkxMd0NYel9xdlpOS3I2WjhBQVBxVGJoOVZhVFBLc0My?oc=5",
       "publishedAt": "2026-08-05T11:55:30.000Z"
-    },
-    {
-      "source": "Reuters",
-      "title": "Japan's economy minister offers sanguine view on inflation",
-      "url": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxOeGdFdlZRcGJ3bllUd0hBZ2w3eVkxeDVLRFdsUmVVNjkyWG9PMFQ1ZVZiS2hfQTVsR3RlcEw0YmVuV09jNlVNQW9HMUZxaFJFWXR3b1hGTkhKRVI4UDVEMXMyOWhUbGtnUG9oQTFnNmFFRzZTUmpOOUpPWXpYNTFEUS1oQjZTTjdVYm4xRU1sSjdNei1PcGFiZXMzRlgwYy01eHdrWkp2TEZKTlR5LVRiS1FpYmlRaHVu?oc=5",
-      "publishedAt": "2026-08-04T02:40:00.000Z"
     },
     {
       "source": "Trading Economics",
@@ -278,21 +284,15 @@
     },
     {
       "source": "Trading Economics",
-      "title": "Copper - Price - Chart - Historical Data - News",
-      "url": "https://news.google.com/rss/articles/CBMiWEFVX3lxTFBIWV9VTlF3TENBTzBNOEJpTWJwdklxWFJPNExxNHJ2VVl0ZlBsamhabnRXTUNFcllpdGFZemdRTndRUTVwdFEzZ2NkUURFNkwyZXZfampxcWI?oc=5",
-      "publishedAt": "2017-05-26T14:04:27.000Z"
+      "title": "United States Existing Home Sales",
+      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE9aQzg5UVotaXJiMndrWVAwekpjeGQ0eUMzX3lDb0hTM0pnVW5fS2RLNGxLcS1CbXd4aTY1NTd2anVuUlZXZzhKZUZwZnBJbzZvMTBlX3Y3OXprMUVXS1pLakhXVVNmdGpGYzY4RjktOA?oc=5",
+      "publishedAt": "2017-05-26T12:16:01.000Z"
     },
     {
       "source": "Trading Economics",
       "title": "TRADING ECONOMICS | 20 million INDICATORS FROM 196 COUNTRIES",
       "url": "https://news.google.com/rss/articles/CBMiQ0FVX3lxTFBXRHl2TzJMN19XNTFzNC1ZdUhxdFBnUW1DN0tON19YSm1mRV9EQXBycmNIWmsxdHl3NkhhY1hZTTB1Zmc?oc=5",
       "publishedAt": "2017-02-03T11:33:17.000Z"
-    },
-    {
-      "source": "Reuters",
-      "title": "Global Market Headlines | Breaking Stock Market News",
-      "url": "https://news.google.com/rss/articles/CBMiR0FVX3lxTE5ZWXF2SEtaQVRwQ2xTbk1CYWlTbXRfQV93SXNlWVJYWkEyeTVVajM5bU00d0szRW5kdDdVa0ZDY3JJNkZRRmlR?oc=5",
-      "publishedAt": "2016-06-06T02:15:43.000Z"
     }
   ]
 }
