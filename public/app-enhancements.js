@@ -27,6 +27,7 @@
   let calendarPage = 0;
   let historyRange = "25";
   let historyPayload = null;
+  let routedLocation = null;
   const tradeImages = { entry:"", management:"", exit:"" };
   let tradeImageUrls = [];
   let tradeSaveTimer;
@@ -80,8 +81,12 @@
     if (pageName === "companies") renderCompanies();
     if (pageName === "company") renderCompany(value);
     if (pageName === "trading-plan") renderTradingPlan();
-    if(location.hash){document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();}
-    else window.scrollTo({ top: 0, behavior: "smooth" });
+    const destination=location.pathname+location.search+location.hash;
+    if(routedLocation!==destination){
+      routedLocation=destination;
+      if(location.hash){document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();}
+      else window.scrollTo({top:0,behavior:"instant"});
+    }
   }
 
   function renderCountryGrid() {
@@ -488,7 +493,7 @@
         record.closureContext=record.macroContext;
         record.macroContext=record.entryContext;
         record.points=existing.points;
-        record.selectedPoints=existing.selectedPoints||[];
+        record.selectedPoints=existing.selectedPoints??null;
         record.images={...(existing.images||{}),...record.images};
       }
     } else {
@@ -734,7 +739,7 @@
     const counterName=decodeURIComponent(counterSelect.value||"United States"), counter=markets.find(row=>row.market===counterName)||markets[1];
     const direction = document.getElementById("plan-direction").value;
     const researchLink=document.getElementById("plan-research-link");
-    if(researchLink)researchLink.href=`/research?market=${encodeURIComponent(assetSelect.value)}&direction=${encodeURIComponent(direction)}`;
+    if(researchLink)researchLink.href=assetSelect.value.includes("Waiting")?"/research":`/research?market=${encodeURIComponent(assetSelect.value)}&direction=${encodeURIComponent(direction)}`;
     const activePoints = [...document.querySelectorAll("[data-indicator]:checked")].reduce((sum,input) => sum + (planIndicators.find(([id])=>id===input.dataset.indicator)?.[2] || 0),0);
     const maxPoints = planIndicators.reduce((sum,item)=>sum+item[2],0);
     const technicalScore = clamp((activePoints/maxPoints)*100);
