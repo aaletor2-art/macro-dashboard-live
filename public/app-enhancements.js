@@ -33,6 +33,7 @@
   const tradeDraftKey = "macro-dashboard-trade-draft-v1";
   const activeTradeKey = "macro-dashboard-active-trade-v1";
   let tradeImageDb;
+  let reopeningTrade = false;
   const countrySymbols = {"United Kingdom":"GBPUSD=X","United States":"DX-Y.NYB","Euro Area":"EURUSD=X",Bulgaria:"EURUSD=X",Japan:"JPY=X",China:"CNY=X",India:"INR=X","South Korea":"KRW=X",Taiwan:"TWD=X",Singapore:"SGD=X","Hong Kong":"HKD=X",Australia:"AUDUSD=X",Canada:"CAD=X",Brazil:"BRL=X",Mexico:"MXN=X",Nigeria:"NGN=X","South Africa":"ZAR=X",Egypt:"EGP=X",Kenya:"KES=X",Ghana:"GHS=X",Morocco:"MAD=X",Angola:"AOA=X",Ethiopia:"ETB=X","Cote d'Ivoire":"XOF=X",Rwanda:"RWF=X"};
   markets.filter(row=>row.region==="Euro Area").forEach(row=>{ countrySymbols[row.market]="EURUSD=X"; });
 
@@ -79,7 +80,8 @@
     if (pageName === "companies") renderCompanies();
     if (pageName === "company") renderCompany(value);
     if (pageName === "trading-plan") renderTradingPlan();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if(location.hash){document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();}
+    else window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function renderCountryGrid() {
@@ -396,7 +398,7 @@
   ];
 
   function clamp(value) { return Math.max(0, Math.min(100, Math.round(value))); }
-  function conviction(score) { return score < 40 ? "Low confidence" : score < 60 ? "Watch only" : score < 75 ? "Moderate confidence" : score < 85 ? "High confidence" : "Very high confidence"; }
+  function conviction(score) { return score < 40 ? "Limited checklist coverage" : score < 75 ? "Partial checklist coverage" : "Broad checklist coverage"; }
 
   function drawPlanChart(item) {
     const canvas = document.getElementById("plan-chart");
@@ -446,6 +448,7 @@
     });
   }
   async function logTrade() {
+    if (reopeningTrade) return;
     const db = await openTradeImageDb();
     const existingId=localStorage.getItem(activeTradeKey);
     const country=markets.find(row=>row.market===decodeURIComponent(tradeValue("plan-country")))||markets[0];
@@ -469,6 +472,7 @@
         headlines, releaseLines:(hosted.calendarLines||[]).filter(line=>line[0]===indicators?.currency).slice(0,5),
         hostedSnapshotDate:hosted.date||null, hostedSnapshotGeneratedAt:hosted.generatedAt||null
       },
+      analysisEntry:{capturedAt:new Date().toISOString(),form:tradeFormSnapshot(),selectedPoints:[...selectedPoints],points:document.getElementById("point-total")?.textContent||""},
       images:{}
     };
     for (const key of Object.keys(tradeImages)) {
@@ -479,6 +483,7 @@
       const existing=await new Promise((resolve,reject)=>{const request=db.transaction("trades").objectStore("trades").get(existingId);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});
       if (existing) {
         record.loggedAt=existing.loggedAt;
+        record.analysisEntry=existing.analysisEntry||{capturedAt:existing.loggedAt,form:existing.form,selectedPoints:existing.selectedPoints,points:existing.points,legacy:true};
         record.entryContext=existing.entryContext||existing.macroContext;
         record.closureContext=record.macroContext;
         record.macroContext=record.entryContext;
@@ -503,16 +508,52 @@
     localStorage.setItem(activeTradeKey,record.id);
     document.getElementById("trade-log").textContent="Update logged trade";
     await renderTradeJournal();
+    document.getElementById("trade-research-saved").href=`/research?trade=${encodeURIComponent(record.id)}&market=${encodeURIComponent(record.market)}`;
     setTradeSaveStatus("Trade entry updated on this device with its current macro snapshot and screenshots.");
+  }
+  async function reopenTrade(id) {
+    reopeningTrade=true;
+    const button=document.getElementById("trade-log");button.disabled=true;
+    setTradeSaveStatus("Opening the selected trade and its saved screenshots…");
+    try {
+      const db=await openTradeImageDb();
+      const row=await new Promise((resolve,reject)=>{const request=db.transaction("trades").objectStore("trades").get(id);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});
+      if(!row)throw new Error("This trade is not stored in this browser. Open the same preview address and browser where you logged it.");
+      clearTimeout(tradeSaveTimer);
+      const fields={...row.form,"plan-asset":row.market,"plan-direction":row.direction,"plan-country":encodeURIComponent(row.country),"plan-counter-country":encodeURIComponent(row.comparison)};
+      for(const [key,value] of Object.entries(fields)){
+        const input=document.getElementById(key);if(!input)continue;
+        if(input.tagName==="SELECT"&&![...input.options].some(o=>o.value===String(value)))input.add(new Option(String(value),String(value)));
+        if(input.type==="checkbox")input.checked=value===true;else input.value=value??"";
+      }
+      document.querySelectorAll("[data-indicator]").forEach(input=>{input.checked=(row.selectedPoints||[]).includes(input.dataset.indicator);});
+      for(const key of Object.keys(tradeImages)){
+        const blob=row.images?.[key];
+        tradeImages[key]=blob?await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob);}):"";
+        const preview=document.getElementById(`trade-preview-${key}`);preview.innerHTML=blob?`<img src="${tradeImages[key]}" alt="Saved ${key} chart">`:"Add image";
+      }
+      // Synchronise the draft images in one transaction so an older draft cannot reappear on reload.
+      await new Promise((resolve,reject)=>{const tx=db.transaction("images","readwrite");for(const key of Object.keys(tradeImages)){if(row.images?.[key])tx.objectStore("images").put(row.images[key],key);else tx.objectStore("images").delete(key);}tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
+      localStorage.setItem(activeTradeKey,row.id);localStorage.setItem(tradeDraftKey,JSON.stringify(tradeFormSnapshot()));
+      button.textContent="Update logged trade";renderTradingPlan();
+      document.getElementById("trade-research-saved").href=`/research?trade=${encodeURIComponent(row.id)}&market=${encodeURIComponent(row.market)}`;
+      setTradeSaveStatus("Saved trade opened. Updates retain the first logged macro context and research tags. Live panels show current market context.");
+    }catch(error){setTradeSaveStatus(error.message||"Trade could not be opened.");}
+    finally{reopeningTrade=false;button.disabled=false;}
   }
   async function startNewTrade() {
     if (!window.confirm("Start a new trade? Your current entry will remain in the journal.")) return;
+    history.replaceState(null,"","/trading-plan");
     const name=tradeValue("trade-name");
-    document.querySelectorAll("#trade-sheet-builder input:not([type=file]), #trade-sheet-builder textarea").forEach(field=>{if(field.id==="trade-name")return;if(field.type==="checkbox")field.checked=false;else field.value="";});
+    document.querySelectorAll("#trade-sheet-builder input:not([type=file]), #trade-sheet-builder textarea, #trade-sheet-builder select").forEach(field=>{if(field.id==="trade-name")return;if(field.type==="checkbox")field.checked=false;else field.value="";});
     document.getElementById("trade-name").value=name;
     const now=new Date();document.getElementById("trade-date").value=now.toISOString().slice(0,10);document.getElementById("trade-time").value=now.toTimeString().slice(0,5);
     for (const key of Object.keys(tradeImages)) { tradeImages[key]="";const input=document.getElementById(`trade-image-${key}`);if(input)input.value="";const preview=document.getElementById(`trade-preview-${key}`);if(preview)preview.textContent="Add image"; }
     try { const db=await openTradeImageDb();await new Promise((resolve,reject)=>{const transaction=db.transaction("images","readwrite");Object.keys(tradeImages).forEach(key=>transaction.objectStore("images").delete(key));transaction.oncomplete=resolve;transaction.onerror=()=>reject(transaction.error);}); } catch {}
+    document.querySelectorAll("[data-indicator]").forEach(input=>{input.checked=false;});
+    document.getElementById("trade-rule-version").value="FIB-BB-STOCH-v1";
+    document.getElementById("trade-stoch-variant").value="Fast 14,3";
+    renderTradingPlan();
     localStorage.removeItem(activeTradeKey);document.getElementById("trade-log").textContent="Log this trade";
     try { localStorage.setItem(tradeDraftKey,JSON.stringify(tradeFormSnapshot())); } catch {}
     setTradeSaveStatus("New trade sheet ready. The previous logged record remains in your journal.");
@@ -535,7 +576,7 @@
       const values=closed.map(item=>item.pnl),total=values.reduce((sum,value)=>sum+value,0),wins=values.filter(value=>value>0),losses=values.filter(value=>value<0);
       const mean=values.length?total/values.length:0,stdev=values.length>1?Math.sqrt(values.reduce((sum,value)=>sum+(value-mean)**2,0)/(values.length-1)):0;
       const profitFactor=losses.length?wins.reduce((sum,value)=>sum+value,0)/Math.abs(losses.reduce((sum,value)=>sum+value,0)):null;
-      const rValues=closed.map(({row,pnl})=>{const raw=String(row.form["trade-risk"]||"");if(raw.includes("%"))return null;const risk=Number.parseFloat(raw.replace(/[^0-9.-]/g,""));return Number.isFinite(risk)&&risk>0?pnl/risk:null;}).filter(Number.isFinite);
+      const rValues=closed.map(({row})=>ResearchMath.rMultiple(row)).filter(value=>value!==null);
       const averageR=rValues.length?rValues.reduce((sum,value)=>sum+value,0)/rValues.length:null;
       const ordered=[...closed].sort((a,b)=>a.row.loggedAt.localeCompare(b.row.loggedAt));let equity=0,peak=0,maxDrawdown=0;ordered.forEach(({pnl})=>{equity+=pnl;peak=Math.max(peak,equity);maxDrawdown=Math.max(maxDrawdown,peak-equity);});
       const discipline=records.map(row=>{const checks=row.form["discipline-followed-trigger"]===true?1:0;const ids=["discipline-kept-stop","discipline-respected-risk","discipline-checked-calendar","discipline-logged-outcome"];return ids.reduce((sum,id)=>sum+(row.form[id]===true?1:0),checks)/5;});
@@ -576,9 +617,13 @@
     } catch { setTradeSaveStatus("Draft recovered; saved screenshots are unavailable in this browser."); }
   }
   function tradeFormSnapshot() {
-    return [...document.querySelectorAll("#trade-sheet-builder input:not([type=file]), #trade-sheet-builder textarea")]
-      .reduce((draft, input) => { draft[input.id] = input.type==="checkbox"?input.checked:input.value; return draft; }, {});
+    const draft=[...document.querySelectorAll("#trade-sheet-builder input:not([type=file]), #trade-sheet-builder textarea, #trade-sheet-builder select")]
+      .reduce((draft,input)=>{draft[input.id]=input.type==="checkbox"?input.checked:input.value;return draft;},{});
+    ["plan-asset","plan-direction","plan-country","plan-counter-country"].forEach(id=>draft[id]=tradeValue(id));
+    draft.selectedPoints=[...document.querySelectorAll("[data-indicator]:checked")].map(input=>input.dataset.indicator);
+    return draft;
   }
+
   function setTradeSaveStatus(message) {
     const status = document.getElementById("trade-save-status");
     if (status) status.textContent = message;
@@ -621,12 +666,14 @@
     document.getElementById("trade-download").onclick = () => { const blob=new Blob([tradeSheetDocumentLat()],{type:"application/msword"});const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=`LAT-Trade-Sheet-${tradeValue("plan-asset")||"setup"}-${tradeValue("trade-date")||"draft"}.doc`;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000); };
     try {
       const saved = JSON.parse(localStorage.getItem(tradeDraftKey) || "{}");
-      Object.entries(saved).forEach(([id, value]) => { const field = document.getElementById(id); if (!field) return; if (field.type === "checkbox") field.checked = Boolean(value); else if (value !== "") field.value = value; });
+      document.querySelectorAll("[data-indicator]").forEach(input=>{input.checked=(saved.selectedPoints||[]).includes(input.dataset.indicator);});
+      Object.entries(saved).forEach(([id, value]) => { const field = document.getElementById(id); if (!field) return; if (field.type === "checkbox") field.checked = Boolean(value); else if (value !== "") {if(field.tagName==="SELECT"&&![...field.options].some(o=>o.value===String(value)))field.add(new Option(String(value),String(value)));field.value=value;} });
     } catch {}
     if (localStorage.getItem(activeTradeKey)) document.getElementById("trade-log").textContent="Update logged trade";
-    document.querySelectorAll("#trade-sheet-builder input:not([type=file]), #trade-sheet-builder textarea").forEach(input => { input.addEventListener(input.type==="checkbox"?"change":"input", scheduleTradeDraftSave); });
+    document.querySelectorAll("#trade-sheet-builder input:not([type=file]), #trade-sheet-builder textarea, #trade-sheet-builder select").forEach(input => { input.addEventListener(input.type==="checkbox"||input.tagName==="SELECT"?"change":"input", scheduleTradeDraftSave); });
     document.querySelectorAll("[data-indicator]").forEach(input => input.addEventListener("change", scheduleTradeDraftSave));
-    restoreTradeImages();
+    const requestedTrade=location.pathname==="/trading-plan"?new URLSearchParams(location.search).get("trade"):null;
+    if(requestedTrade)reopenTrade(requestedTrade);else restoreTradeImages();
     renderTradeJournal();
     [["entry","trade-image-entry"],["management","trade-image-management"],["exit","trade-image-exit"]].forEach(([key,id])=>document.getElementById(id).onchange=async event=>{const file=event.target.files?.[0];if(!file)return;if(!file.type.startsWith("image/")){setTradeSaveStatus("Choose an image screenshot.");return;}setTradeSaveStatus("Compressing and saving screenshot…");try{const blob=await resizeTradeScreenshot(file);await storeTradeImage(key,blob);tradeImages[key]=await new Promise(resolve=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.readAsDataURL(blob)});document.getElementById(`trade-preview-${key}`).innerHTML=`<img src="${tradeImages[key]}" alt="${key} chart preview">`;setTradeSaveStatus(`${key[0].toUpperCase()+key.slice(1)} screenshot saved on this device.`);}catch{setTradeSaveStatus("Screenshot could not be saved. Check browser storage permissions.");}});
     document.getElementById("trade-autofill").dataset.bound="true";
@@ -674,15 +721,20 @@
       document.querySelectorAll("[data-indicator]").forEach(input => input.addEventListener("change", renderTradingPlan));
       const [initialPrimary,initialCounter]=assetCountryPair(assetSelect.value);countrySelect.value=encodeURIComponent(initialPrimary);counterSelect.value=encodeURIComponent(initialCounter);
       assetSelect.dataset.bound="true";
-    } else if (assetSelect.options.length <= 1 && live.markets?.length) {
+    } else if (!assetSelect.dataset.liveLoaded && live.markets?.length) {
+      const previousAsset=assetSelect.value,previousCountry=countrySelect.value,previousCounter=counterSelect.value;
+      assetSelect.dataset.liveLoaded="true";
       assetSelect.innerHTML = live.markets.map(row => `<option value="${row.symbol}">${row.asset}</option>`).join("");
-      const [primary,counter]=assetCountryPair(assetSelect.value);countrySelect.value=encodeURIComponent(primary);counterSelect.value=encodeURIComponent(counter);
+      if([...assetSelect.options].some(o=>o.value===previousAsset)){assetSelect.value=previousAsset;countrySelect.value=previousCountry;counterSelect.value=previousCounter;}
+      else {const [primary,counter]=assetCountryPair(assetSelect.value);countrySelect.value=encodeURIComponent(primary);counterSelect.value=encodeURIComponent(counter);}
     }
     const item = (live.markets || []).find(row => row.symbol === assetSelect.value) || live.markets?.[0];
     const countryName = decodeURIComponent(countrySelect.value || "United Kingdom");
     const country = markets.find(row => row.market === countryName) || markets[0];
     const counterName=decodeURIComponent(counterSelect.value||"United States"), counter=markets.find(row=>row.market===counterName)||markets[1];
     const direction = document.getElementById("plan-direction").value;
+    const researchLink=document.getElementById("plan-research-link");
+    if(researchLink)researchLink.href=`/research?market=${encodeURIComponent(assetSelect.value)}&direction=${encodeURIComponent(direction)}`;
     const activePoints = [...document.querySelectorAll("[data-indicator]:checked")].reduce((sum,input) => sum + (planIndicators.find(([id])=>id===input.dataset.indicator)?.[2] || 0),0);
     const maxPoints = planIndicators.reduce((sum,item)=>sum+item[2],0);
     const technicalScore = clamp((activePoints/maxPoints)*100);
@@ -736,13 +788,17 @@
     const storageKey="macro-capital-scenarios-v1";
     try { const saved=JSON.parse(localStorage.getItem(storageKey)||"{}"); fields.forEach((field,i)=>{if(saved[keys[i]]!=null)field.value=saved[keys[i]];}); } catch {}
     let rows=[];
+    const chart3d=new Chart3D(document.getElementById("capital-chart-3d"),{labels:["Month","Monthly return (%)","Capital (£)"],format:p=>`Month ${p.x} · return ${p.y.toFixed(2)}% · capital £${p.z.toFixed(2)} · unfunded withdrawals £${p.unfunded.toFixed(2)}`});
     function render() {
       const summary=document.getElementById("forecast-summary"),body=document.getElementById("forecast-rows"),canvas=document.getElementById("forecast-chart"),ctx=canvas.getContext("2d");
       ctx.clearRect(0,0,canvas.width,canvas.height);rows=[];
+      chart3d.setData([]);document.getElementById("capital-3d-status").textContent="Enter valid cashflow assumptions above.";
       const values=fields.map(field=>Number(field.value));
-      if(!fields[0].value||values.some(value=>!Number.isFinite(value))||values[0]<0||values[2]<0||values[4]<0||Math.abs(values[3])+values[4]>100||![3,6,12,24].includes(values[5])) { summary.textContent="Enter valid assumptions. Starting capital, withdrawals and volatility must be non-negative; return plus volatility must stay within 100%.";body.innerHTML="";return; }
+      if(!fields[0].value||values.some(value=>!Number.isFinite(value))||values[0]<0||values[1]<0||values[2]<0||values[4]<0||Math.abs(values[3])+values[4]>100||![3,6,12,24].includes(values[5])) { summary.textContent="Enter valid assumptions. Capital, deposits, withdrawals and sensitivity must be non-negative; absolute return plus sensitivity must stay within 100%.";body.innerHTML="";return; }
       try { localStorage.setItem(storageKey,JSON.stringify(Object.fromEntries(keys.map((key,i)=>[key,fields[i].value])))); } catch {}
       const [capital,inflow,outflow,rate,volatility,months]=values,flow=inflow-outflow;
+      const surface=ResearchMath.capitalSurface({capital,deposit:inflow,withdrawal:outflow,rate,spread:volatility,months});
+      if(surface){const cross=surface[0].map((_,i)=>surface.map(line=>line[i]));chart3d.setData(surface.flat(),[...surface,...cross]);document.getElementById("capital-3d-status").textContent=`${surface.length} return scenarios across ${months} months. Inputs are shared with the cashflow table below.`;}
       let lower=capital,base=capital,upper=capital;
       for(let month=1;month<=months;month++) {
         lower=Math.max(0,lower*(1+(rate-volatility)/100)+flow);
