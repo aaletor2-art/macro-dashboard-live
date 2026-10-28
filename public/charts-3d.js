@@ -16,7 +16,7 @@
       this.canvas.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();if(e.key==='ArrowLeft')this.yaw-=.1;if(e.key==='ArrowRight')this.yaw+=.1;if(e.key==='ArrowUp')this.pitch+=.1;if(e.key==='ArrowDown')this.pitch-=.1;this.pitch=Math.max(.17,Math.min(1.39,this.pitch));this.yaw=Math.max(-Math.PI,Math.min(Math.PI,this.yaw));sync();this.draw();};
     }
     setData(points,lines=[]){this.points=points;this.lines=lines;this.selected=null;this.readout.textContent=points.length?'Drag to rotate; hover or tap to inspect. Arrow keys also rotate.':'No eligible data yet. Use the table and plan fields to see what is missing.';this.draw();}
-    project(x,y,z){const a=x*Math.cos(this.yaw)-y*Math.sin(this.yaw),b=x*Math.sin(this.yaw)+y*Math.cos(this.yaw);return {x:500+a*205,y:235+(b*Math.sin(this.pitch)-z*Math.cos(this.pitch))*160,depth:b*Math.cos(this.pitch)+z*Math.sin(this.pitch)};}
+    project(x,y,z){const a=x*Math.cos(this.yaw)-y*Math.sin(this.yaw),b=x*Math.sin(this.yaw)+y*Math.cos(this.yaw);return {x:500+a*205,y:235+(b*Math.sin(this.pitch)-z*Math.cos(this.pitch))*115,depth:b*Math.cos(this.pitch)+z*Math.sin(this.pitch)};}
     draw(){const ctx=this.ctx;ctx.clearRect(0,0,1000,470);ctx.fillStyle='#f6f9f7';ctx.fillRect(0,0,1000,470);ctx.font='13px system-ui';
       const ranges=['x','y','z'].map(k=>{let min=Infinity,max=-Infinity;this.points.forEach(p=>{min=Math.min(min,p[k]);max=Math.max(max,p[k]);});return min===Infinity?[0,1]:[min,max===min?min+1:max];});
       const norm=(v,i)=>-1+2*(v-ranges[i][0])/(ranges[i][1]-ranges[i][0]);const point=p=>this.project(norm(p.x,0),norm(p.y,1),norm(p.z,2));
