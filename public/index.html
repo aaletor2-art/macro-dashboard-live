@@ -331,7 +331,7 @@
         <div class="refresh-note" id="refresh-note">Hosted data refreshes automatically after the UK close.</div>
       </div>
     </div>
-    <nav class="site-nav" aria-label="Dashboard sections">
+    <nav class="site-nav" aria-label="Dashboard sections"><a href="/research" data-route="research">Strategy research</a>
       <a href="/" data-route="countries">Countries</a>
       <a href="/markets" data-route="markets">Markets</a>
       <a href="/calendar" data-route="calendar">Economic calendar</a>
@@ -650,6 +650,15 @@
       <div id="news-grid" class="news-grid"></div>
       <div class="news-disclaimer">Headlines remain the property of their publishers. ABMOTH links to source pages and does not reproduce full articles. Reuters and Trading Economics may apply regional access or subscription limits.</div>
     </section>
+<section class="page" data-page="research" id="research-page">
+<div class="page-hero"><div><span class="eyebrow">YOUR STRATEGY · EVIDENCE OVER TIME</span><h2>Trade research &amp; macro archive</h2><p>Review outcomes, compare discipline and revisit the evidence behind each trade.</p></div></div>
+<div class="plan-card"><h3>Research window</h3><div class="forecast-inputs"><label>From<input id="research-from" type="date"></label><label>Through<input id="research-to" type="date"></label><label>Market<input id="research-market" placeholder="All markets"></label><label>Direction<select id="research-direction"><option value="">Both directions</option><option>Buy</option><option>Sell</option></select></label></div><button id="research-refresh">Refresh analysis</button> <button id="research-report">Download dated report</button><p id="research-status" role="status"></p></div>
+<div id="research-stats" class="trade-stat-grid"></div><section class="plan-card"><h3>Cumulative realised P&amp;L</h3><p>Cash P&amp;L in exit order; deposits and withdrawals are excluded.</p><canvas id="research-equity" width="1100" height="280" style="width:100%;height:auto"></canvas></section>
+<section class="plan-card"><h3>Discipline &amp; setup efficacy</h3><div id="research-cohorts"></div><p>These comparisons describe your sample; they do not establish that a rule caused the result.</p></section>
+<section class="plan-card"><h3>Historical outcome scenarios</h3><p>Resample your closed-trade P&amp;L to explore possible outcomes. Assumes the same trade size and outcome distribution; does not model changing market conditions.</p><label>Number of future trades <input type="number" id="research-horizon" min="1" max="100" value="20"></label> <button id="research-simulate">Calculate outcome range</button><p id="research-simulation" role="status">At least 10 closed trades are required.</p></section>
+<section class="plan-card"><h3>Trade evidence library</h3><div id="research-trades"></div><button id="research-prev">Previous</button> <span id="research-page-number"></span> <button id="research-next">Next</button></section>
+<section class="plan-card"><h3>Economic release lookup</h3><p>Trading Economics provider lookup. Permanent server archive is not connected yet; these results are not archived. <a href="https://www.fxstreet.com/economic-calendar" target="_blank" rel="noopener">Cross-check FXStreet</a>.</p><div class="forecast-inputs"><label>Country<input id="research-country" value="united states"></label><label>From<input id="release-from" type="date"></label><label>Through<input id="release-to" type="date"></label></div><button id="release-load">Fetch releases</button><p id="release-status" role="status"></p><div id="research-releases"></div></section>
+</section>
   </main>
 
   <script>
@@ -1093,5 +1102,6 @@
     loadHostedDailyData();
   </script>
   <script src="/app-enhancements.js?v=20261028-1"></script>
+<script src="/research.js?v=20261028-2"></script>
 </body>
 </html>
