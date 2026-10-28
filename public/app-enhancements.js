@@ -67,7 +67,7 @@
     const historyView = parts[0] === "countries" && parts[1] && parts[2] === "history";
     if (parts[0] === "countries" && parts[1]) { pageName = "country"; value = parts[1]; }
     else if (parts[0] === "companies" && parts[1]) { pageName = "company"; value = parts[1]; }
-    else if (["markets","calendar","companies","trading-plan"].includes(parts[0])) pageName = parts[0];
+    else if (["markets","calendar","companies","trading-plan","research"].includes(parts[0])) pageName = parts[0];
     document.querySelectorAll(".page").forEach(page => page.classList.toggle("active", page.dataset.page === pageName));
     document.querySelectorAll(".site-nav a").forEach(link => link.classList.toggle("active", link.dataset.route === (pageName === "country" ? "countries" : pageName === "company" ? "companies" : pageName)));
     if (pageName === "country") {
