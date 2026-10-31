@@ -27,7 +27,14 @@
   let calendarPage = 0;
   let historyRange = "25";
   let historyPayload = null;
+  let routedLocation = null;
   const tradeImages = { entry:"", management:"", exit:"" };
+  let tradeImageUrls = [];
+  let tradeSaveTimer;
+  const tradeDraftKey = "macro-dashboard-trade-draft-v1";
+  const activeTradeKey = "macro-dashboard-active-trade-v1";
+  let tradeImageDb;
+  let reopeningTrade = false;
   const countrySymbols = {"United Kingdom":"GBPUSD=X","United States":"DX-Y.NYB","Euro Area":"EURUSD=X",Bulgaria:"EURUSD=X",Japan:"JPY=X",China:"CNY=X",India:"INR=X","South Korea":"KRW=X",Taiwan:"TWD=X",Singapore:"SGD=X","Hong Kong":"HKD=X",Australia:"AUDUSD=X",Canada:"CAD=X",Brazil:"BRL=X",Mexico:"MXN=X",Nigeria:"NGN=X","South Africa":"ZAR=X",Egypt:"EGP=X",Kenya:"KES=X",Ghana:"GHS=X",Morocco:"MAD=X",Angola:"AOA=X",Ethiopia:"ETB=X","Cote d'Ivoire":"XOF=X",Rwanda:"RWF=X"};
   markets.filter(row=>row.region==="Euro Area").forEach(row=>{ countrySymbols[row.market]="EURUSD=X"; });
 
@@ -62,7 +69,7 @@
     const historyView = parts[0] === "countries" && parts[1] && parts[2] === "history";
     if (parts[0] === "countries" && parts[1]) { pageName = "country"; value = parts[1]; }
     else if (parts[0] === "companies" && parts[1]) { pageName = "company"; value = parts[1]; }
-    else if (["markets","calendar","companies","trading-plan"].includes(parts[0])) pageName = parts[0];
+    else if (["markets","calendar","companies","trading-plan","research"].includes(parts[0])) pageName = parts[0];
     document.querySelectorAll(".page").forEach(page => page.classList.toggle("active", page.dataset.page === pageName));
     document.querySelectorAll(".site-nav a").forEach(link => link.classList.toggle("active", link.dataset.route === (pageName === "country" ? "countries" : pageName === "company" ? "companies" : pageName)));
     if (pageName === "country") {
@@ -74,7 +81,12 @@
     if (pageName === "companies") renderCompanies();
     if (pageName === "company") renderCompany(value);
     if (pageName === "trading-plan") renderTradingPlan();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const destination=location.pathname+location.search+location.hash;
+    if(routedLocation!==destination){
+      routedLocation=destination;
+      if(location.hash){document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();}
+      else window.scrollTo({top:0,behavior:"instant"});
+    }
   }
 
   function renderCountryGrid() {
@@ -322,9 +334,9 @@
     document.getElementById("calendar-prev").disabled=calendarPage===0; document.getElementById("calendar-next").disabled=calendarPage>=pages-1;
     const lines = (hosted.calendarLines || []).filter(line => selected === "All" || line[0] === selected);
     const keyRows=[...rows].sort((a,b)=>({High:3,Medium:2,Low:1}[b.impact]-{High:3,Medium:2,Low:1}[a.impact]||Math.abs(b.change||0)-Math.abs(a.change||0))).slice(0,6);
-    document.getElementById("calendar-story").innerHTML=`<section><span class="eyebrow">TODAY'S STORY</span><h3>${keyRows.filter(x=>x.impact==="High").length} high-impact releases lead the watchlist</h3><p>${keyRows[0]?`${keyRows[0].market} ${keyRows[0].label.toLowerCase()} is the first priority. ${keyRows[0].change>0?"It is running above the comparison baseline":"It is at or below the comparison baseline"}, so check the currency and rate response before using it as a directional signal.`:"Choose a currency or metric to build today’s watchlist."}</p></section><div class="story-impact">${["High","Medium","Low"].map(level=>`<div class="${level.toLowerCase()}"><strong>${rows.filter(x=>x.impact===level).length}</strong><span>${level} impact</span><small>${usefulness[level]}</small></div>`).join("")}</div>`;
+    document.getElementById("calendar-story").innerHTML=`<section><span class="eyebrow">BASELINE OBSERVATIONS · NOT A LIVE RELEASE SCHEDULE</span><h3>${rows.length} mapped observations available</h3><p>${keyRows[0]?`${keyRows[0].market} ${keyRows[0].label.toLowerCase()} is classed ${keyRows[0].impact.toLowerCase()} under the dashboard’s simple impact guide. The source workbook does not carry a release timestamp or consensus source for every value, so verify current releases before using this as an event catalyst.`:"Choose a currency or metric to inspect mapped data."}</p></section><div class="story-impact">${["High","Medium","Low"].map(level=>`<div class="${level.toLowerCase()}"><strong>${rows.filter(x=>x.impact===level).length}</strong><span>${level} guide</span><small>${usefulness[level]}</small></div>`).join("")}</div>`;
     document.getElementById("calendar-summary").innerHTML = keyRows.map(row => `<article class="calendar-event ${row.impact.toLowerCase()}"><span>${row.currency}</span><div><div class="event-impact"><b>${row.impact} impact</b><small>${row.market}</small></div><strong>${row.label}</strong><p>${indicatorGuides[row.label]} <a href="/countries/${countryCodes[row.market]}/history?indicator=${row.label==="GDP"?"gdp":row.label==="Unemployment"?"unemployment":"inflation"}">Open data →</a></p></div></article>`).join("") || `<div class="empty-state">No releases match this view.</div>`;
-    const relatedNews=(hosted.news||[]).slice(0,3); document.getElementById("calendar-news").innerHTML=`<div><span class="eyebrow">CALENDAR + CONTEXT</span><h3>Why markets may care today</h3><p>Calendar data tells you what changed; reporting helps explain why and how markets are interpreting it.</p></div>${relatedNews.map(item=>`<a target="_blank" rel="noopener" href="${item.url}"><span>${item.source}</span><strong>${item.title}</strong><small>${whyItMatters(item.title)}</small></a>`).join("")}`;
+    const relatedNews=(hosted.news||[]).slice(0,3); document.getElementById("calendar-news").innerHTML=`<div><span class="eyebrow">LATEST HEADLINE LINKS</span><h3>News context to review alongside releases</h3><p>Headlines are cached links for discovery. Their presence does not establish causality; record the thesis and review price reaction in your trade journal.</p></div>${relatedNews.map(item=>`<a target="_blank" rel="noopener" href="${item.url}"><span>${item.source}</span><strong>${item.title}</strong><small>${whyItMatters(item.title)}</small></a>`).join("")}`;
     document.getElementById("metric-guide-grid").innerHTML=Object.entries(indicatorGuides).map(([label,guide])=>`<button data-guide="${label}"><span>${impactFor(label)} impact</span><strong>${label}</strong><small>${guide}</small><em>Click to filter calendar →</em></button>`).join("");
     document.querySelectorAll("[data-guide],.metric-info").forEach(button=>button.addEventListener("click",()=>{document.getElementById("calendar-search").value=button.dataset.guide||button.dataset.metric;calendarPage=0;renderFullCalendar();document.querySelector(".calendar-panel").scrollIntoView({behavior:"smooth"});}));
     document.getElementById("calendar-refresh").textContent=hosted.date?`Refreshed ${hosted.date}`:"Latest data";
@@ -387,11 +399,11 @@
   function drawPeerChart(peers){const canvas=document.getElementById("peer-price-chart");if(!canvas)return;const ctx=canvas.getContext("2d"),ratio=window.devicePixelRatio||1,width=canvas.clientWidth||900,height=canvas.clientHeight||340;canvas.width=width*ratio;canvas.height=height*ratio;ctx.scale(ratio,ratio);ctx.clearRect(0,0,width,height);const usable=peers.filter(x=>x.chart?.length>1);if(!usable.length){ctx.fillStyle="#66706b";ctx.font="14px sans-serif";ctx.fillText("No comparable free price series are currently available.",24,40);return;}const colours=["#087a55","#375a7f","#d17b27","#8b5fbf","#c13b4a"],series=usable.map(x=>({...x,values:x.chart.map(p=>({date:p.date,value:p.value/x.chart[0].value*100}))})),values=series.flatMap(x=>x.values.map(p=>p.value)),min=Math.min(...values)-2,max=Math.max(...values)+2,pad={left:45,right:20,top:25,bottom:35},x=(i,n)=>pad.left+i*(width-pad.left-pad.right)/Math.max(1,n-1),y=v=>pad.top+(max-v)*(height-pad.top-pad.bottom)/(max-min);ctx.strokeStyle="#e1e6e3";[0,.25,.5,.75,1].forEach(step=>{const py=pad.top+step*(height-pad.top-pad.bottom);ctx.beginPath();ctx.moveTo(pad.left,py);ctx.lineTo(width-pad.right,py);ctx.stroke()});series.forEach((row,index)=>{ctx.strokeStyle=colours[index];ctx.lineWidth=2;ctx.beginPath();row.values.forEach((p,i)=>i?ctx.lineTo(x(i,row.values.length),y(p.value)):ctx.moveTo(x(i,row.values.length),y(p.value)));ctx.stroke();ctx.fillStyle=colours[index];ctx.fillText(row.name,pad.left+index*145,15)});}
 
   const planIndicators = [
-    ["support-resistance","Support / resistance",3], ["trend","Trend",3], ["trendline","Trendline",1], ["channel","Channel",1], ["fib-50","Fibonacci 50%",1], ["fib-618","Fibonacci 61.8%",1], ["macd-obos","MACD overbought / oversold",1], ["macd-divergence","MACD divergence",2], ["macd-crossover","MACD crossover",1], ["bollinger-rejection","Bollinger Band rejection",1], ["stochastic-confirmation","Stochastic confirmation",1], ["round-number","Round-number support / resistance",2]
+    ["support-resistance","Support / resistance",3], ["trend","Trend",3], ["trendline","Trendline",1], ["channel","Channel",1], ["fib-50","Fibonacci 50%",1], ["fib-618","Fibonacci 61.8%",1], ["stochastic-cross","Stochastic %K/%D turn from an extreme",2], ["stochastic-divergence","Price / Stochastic divergence",2], ["bollinger-rejection","Bollinger Band rejection confirmed by close",1], ["round-number","Round-number support / resistance",2]
   ];
 
   function clamp(value) { return Math.max(0, Math.min(100, Math.round(value))); }
-  function conviction(score) { return score < 40 ? "Low confidence" : score < 60 ? "Watch only" : score < 75 ? "Moderate confidence" : score < 85 ? "High confidence" : "Very high confidence"; }
+  function conviction(score) { return score < 40 ? "Limited checklist coverage" : score < 75 ? "Partial checklist coverage" : "Broad checklist coverage"; }
 
   function drawPlanChart(item) {
     const canvas = document.getElementById("plan-chart");
@@ -414,15 +426,261 @@
   }
 
   const tradeValue = id => document.getElementById(id)?.value || "";
+  function openTradeImageDb() {
+    if (tradeImageDb) return tradeImageDb;
+    tradeImageDb = new Promise((resolve, reject) => {
+      const request = indexedDB.open("macro-dashboard-trades", 2);
+      request.onupgradeneeded = () => {
+        if (!request.result.objectStoreNames.contains("images")) request.result.createObjectStore("images");
+        if (!request.result.objectStoreNames.contains("trades")) request.result.createObjectStore("trades", { keyPath:"id" });
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    return tradeImageDb;
+  }
+  async function storeTradeImage(key, blob) {
+    if (navigator.storage?.estimate) {
+      const {usage=0, quota=Infinity} = await navigator.storage.estimate();
+      if (quota > 0 && usage + blob.size > quota * 0.8) throw new Error("Browser storage is nearly full");
+    }
+    const db = await openTradeImageDb();
+    await new Promise((resolve, reject) => {
+      const transaction = db.transaction("images", "readwrite");
+      transaction.objectStore("images").put(blob, key);
+      transaction.oncomplete = resolve;
+      transaction.onerror = () => reject(transaction.error);
+    });
+  }
+  async function logTrade() {
+    if (reopeningTrade) return;
+    const db = await openTradeImageDb();
+    const existingId=localStorage.getItem(activeTradeKey);
+    const country=markets.find(row=>row.market===decodeURIComponent(tradeValue("plan-country")))||markets[0];
+    const counter=markets.find(row=>row.market===decodeURIComponent(tradeValue("plan-counter-country")))||markets[1];
+    const asset=tradeValue("plan-asset"), quote=(live.markets||[]).find(row=>row.symbol===asset)||null;
+    const indicators=latestIndicator(country.market);
+    const selectedPoints=[...document.querySelectorAll("[data-indicator]:checked")].map(input=>input.dataset.indicator);
+    const headlines=planNews(country,counter).slice(0,5).map(({title,url,source,publishedAt})=>({title,url,source,publishedAt}));
+    const record = {
+      id:existingId||crypto.randomUUID(), loggedAt:new Date().toISOString(), updatedAt:new Date().toISOString(), form:tradeFormSnapshot(), market:asset,
+      direction:tradeValue("plan-direction"), country:country.market, comparison:counter.market,
+      points:document.getElementById("point-total")?.textContent||"", selectedPoints,
+      macroContext:{
+        capturedAt:new Date().toISOString(),
+        sourceStatus:"Rates and most inflation values are a static dashboard baseline, not live-verified. Release figures are workbook-template values without a release date or consensus source.",
+        primary:{market:country.market,inflation:country.inflation,rate:country.rate,realRate:realRateFor(country),bias:country.bias,pressure:country.pressure,inflationPeriod:country.inflationPeriod||null,indicators:indicators?JSON.parse(JSON.stringify(indicators)):null},
+        comparison:{market:counter.market,inflation:counter.inflation,rate:counter.rate,realRate:realRateFor(counter),bias:counter.bias,pressure:counter.pressure},
+        rateDifferential:country.rate!=null&&counter.rate!=null?country.rate-counter.rate:null,
+        inflationDifferential:country.inflation!=null&&counter.inflation!=null?country.inflation-counter.inflation:null,
+        quote:quote?{price:quote.price,changePct:quote.changePct,marketTime:quote.marketTime}:null,
+        headlines, releaseLines:(hosted.calendarLines||[]).filter(line=>line[0]===indicators?.currency).slice(0,5),
+        hostedSnapshotDate:hosted.date||null, hostedSnapshotGeneratedAt:hosted.generatedAt||null
+      },
+      analysisEntry:{capturedAt:new Date().toISOString(),form:tradeFormSnapshot(),selectedPoints:[...selectedPoints],points:document.getElementById("point-total")?.textContent||""},
+      images:{}
+    };
+    for (const key of Object.keys(tradeImages)) {
+      const blob = tradeImages[key] ? await new Promise(resolve => fetch(tradeImages[key]).then(response => resolve(response.blob())).catch(() => resolve(null))) : null;
+      if (blob) record.images[key] = blob;
+    }
+    if (existingId) {
+      const existing=await new Promise((resolve,reject)=>{const request=db.transaction("trades").objectStore("trades").get(existingId);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});
+      if (existing) {
+        record.loggedAt=existing.loggedAt;
+        record.analysisEntry=existing.analysisEntry||{capturedAt:existing.loggedAt,form:existing.form,selectedPoints:existing.selectedPoints,points:existing.points,legacy:true};
+        record.entryContext=existing.entryContext||existing.macroContext;
+        record.closureContext=record.macroContext;
+        record.macroContext=record.entryContext;
+        record.points=existing.points;
+        record.selectedPoints=existing.selectedPoints??null;
+        record.images={...(existing.images||{}),...record.images};
+      }
+    } else {
+      record.entryContext=record.macroContext;
+    }
+    if (navigator.storage?.estimate) {
+      const {usage=0, quota=Infinity} = await navigator.storage.estimate();
+      const imageBytes = Object.values(record.images).reduce((sum,blob)=>sum+blob.size,0);
+      if (quota > 0 && usage + imageBytes > quota * 0.8) throw new Error("Browser storage is nearly full");
+    }
+    await new Promise((resolve, reject) => {
+      const transaction = db.transaction("trades", "readwrite");
+      transaction.objectStore("trades").put(record);
+      transaction.oncomplete = resolve;
+      transaction.onerror = () => reject(transaction.error);
+    });
+    localStorage.setItem(activeTradeKey,record.id);
+    document.getElementById("trade-log").textContent="Update logged trade";
+    await renderTradeJournal();
+    document.getElementById("trade-research-saved").href=`/research?trade=${encodeURIComponent(record.id)}&market=${encodeURIComponent(record.market)}`;
+    setTradeSaveStatus("Trade entry updated on this device with its current macro snapshot and screenshots.");
+  }
+  async function reopenTrade(id) {
+    reopeningTrade=true;
+    const button=document.getElementById("trade-log");button.disabled=true;
+    setTradeSaveStatus("Opening the selected trade and its saved screenshots…");
+    try {
+      const db=await openTradeImageDb();
+      const row=await new Promise((resolve,reject)=>{const request=db.transaction("trades").objectStore("trades").get(id);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});
+      if(!row)throw new Error("This trade is not stored in this browser. Open the same preview address and browser where you logged it.");
+      clearTimeout(tradeSaveTimer);
+      const fields={...row.form,"plan-asset":row.market,"plan-direction":row.direction,"plan-country":encodeURIComponent(row.country),"plan-counter-country":encodeURIComponent(row.comparison)};
+      for(const [key,value] of Object.entries(fields)){
+        const input=document.getElementById(key);if(!input)continue;
+        if(input.tagName==="SELECT"&&![...input.options].some(o=>o.value===String(value)))input.add(new Option(String(value),String(value)));
+        if(input.type==="checkbox")input.checked=value===true;else input.value=value??"";
+      }
+      document.querySelectorAll("[data-indicator]").forEach(input=>{input.checked=(row.selectedPoints||[]).includes(input.dataset.indicator);});
+      for(const key of Object.keys(tradeImages)){
+        const blob=row.images?.[key];
+        tradeImages[key]=blob?await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob);}):"";
+        const preview=document.getElementById(`trade-preview-${key}`);preview.innerHTML=blob?`<img src="${tradeImages[key]}" alt="Saved ${key} chart">`:"Add image";
+      }
+      // Synchronise the draft images in one transaction so an older draft cannot reappear on reload.
+      await new Promise((resolve,reject)=>{const tx=db.transaction("images","readwrite");for(const key of Object.keys(tradeImages)){if(row.images?.[key])tx.objectStore("images").put(row.images[key],key);else tx.objectStore("images").delete(key);}tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
+      localStorage.setItem(activeTradeKey,row.id);localStorage.setItem(tradeDraftKey,JSON.stringify(tradeFormSnapshot()));
+      button.textContent="Update logged trade";renderTradingPlan();
+      document.getElementById("trade-research-saved").href=`/research?trade=${encodeURIComponent(row.id)}&market=${encodeURIComponent(row.market)}`;
+      setTradeSaveStatus("Saved trade opened. Updates retain the first logged macro context and research tags. Live panels show current market context.");
+    }catch(error){setTradeSaveStatus(error.message||"Trade could not be opened.");}
+    finally{reopeningTrade=false;button.disabled=false;}
+  }
+  async function startNewTrade() {
+    if (!window.confirm("Start a new trade? Your current entry will remain in the journal.")) return;
+    history.replaceState(null,"","/trading-plan");
+    const name=tradeValue("trade-name");
+    document.querySelectorAll("#trade-sheet-builder input:not([type=file]), #trade-sheet-builder textarea, #trade-sheet-builder select").forEach(field=>{if(field.id==="trade-name")return;if(field.type==="checkbox")field.checked=false;else field.value="";});
+    document.getElementById("trade-name").value=name;
+    const now=new Date();document.getElementById("trade-date").value=now.toISOString().slice(0,10);document.getElementById("trade-time").value=now.toTimeString().slice(0,5);
+    for (const key of Object.keys(tradeImages)) { tradeImages[key]="";const input=document.getElementById(`trade-image-${key}`);if(input)input.value="";const preview=document.getElementById(`trade-preview-${key}`);if(preview)preview.textContent="Add image"; }
+    try { const db=await openTradeImageDb();await new Promise((resolve,reject)=>{const transaction=db.transaction("images","readwrite");Object.keys(tradeImages).forEach(key=>transaction.objectStore("images").delete(key));transaction.oncomplete=resolve;transaction.onerror=()=>reject(transaction.error);}); } catch {}
+    document.querySelectorAll("[data-indicator]").forEach(input=>{input.checked=false;});
+    document.getElementById("trade-rule-version").value="FIB-BB-STOCH-v1";
+    document.getElementById("trade-stoch-variant").value="Fast 14,3";
+    renderTradingPlan();
+    localStorage.removeItem(activeTradeKey);document.getElementById("trade-log").textContent="Log this trade";
+    try { localStorage.setItem(tradeDraftKey,JSON.stringify(tradeFormSnapshot())); } catch {}
+    setTradeSaveStatus("New trade sheet ready. The previous logged record remains in your journal.");
+  }
+  async function readTradeRecords() {
+    const db = await openTradeImageDb();
+    return new Promise((resolve, reject) => {
+      const request = db.transaction("trades").objectStore("trades").getAll();
+      request.onsuccess = () => resolve(request.result.sort((a,b)=>b.loggedAt.localeCompare(a.loggedAt)));
+      request.onerror = () => reject(request.error);
+    });
+  }
+  async function renderTradeJournal() {
+    const list = document.getElementById("trade-journal-list");
+    if (!list) return;
+    try {
+      tradeImageUrls.forEach(url=>URL.revokeObjectURL(url)); tradeImageUrls=[];
+      const records = await readTradeRecords();
+      const closed = records.map(row=>({row,pnl:row.form["trade-pnl"]===""||row.form["trade-pnl"]==null?null:Number(row.form["trade-pnl"])})).filter(item=>Number.isFinite(item.pnl));
+      const values=closed.map(item=>item.pnl),total=values.reduce((sum,value)=>sum+value,0),wins=values.filter(value=>value>0),losses=values.filter(value=>value<0);
+      const mean=values.length?total/values.length:0,stdev=values.length>1?Math.sqrt(values.reduce((sum,value)=>sum+(value-mean)**2,0)/(values.length-1)):0;
+      const profitFactor=losses.length?wins.reduce((sum,value)=>sum+value,0)/Math.abs(losses.reduce((sum,value)=>sum+value,0)):null;
+      const rValues=closed.map(({row})=>ResearchMath.rMultiple(row)).filter(value=>value!==null);
+      const averageR=rValues.length?rValues.reduce((sum,value)=>sum+value,0)/rValues.length:null;
+      const ordered=[...closed].sort((a,b)=>a.row.loggedAt.localeCompare(b.row.loggedAt));let equity=0,peak=0,maxDrawdown=0;ordered.forEach(({pnl})=>{equity+=pnl;peak=Math.max(peak,equity);maxDrawdown=Math.max(maxDrawdown,peak-equity);});
+      const discipline=records.map(row=>{const checks=row.form["discipline-followed-trigger"]===true?1:0;const ids=["discipline-kept-stop","discipline-respected-risk","discipline-checked-calendar","discipline-logged-outcome"];return ids.reduce((sum,id)=>sum+(row.form[id]===true?1:0),checks)/5;});
+      const disciplinePct=discipline.length?Math.round(discipline.reduce((sum,value)=>sum+value,0)/discipline.length*100):0;
+      const checklistScore=row=>{const ids=["discipline-followed-trigger","discipline-kept-stop","discipline-respected-risk","discipline-checked-calendar","discipline-logged-outcome"];return ids.filter(id=>row.form[id]===true).length/ids.length;};
+      const disciplineCompare=threshold=>closed.filter(({row})=>checklistScore(row)>=threshold);
+      const meanOf=items=>items.length?items.reduce((sum,item)=>sum+item.pnl,0)/items.length:null;
+      const highDiscipline=disciplineCompare(.8),lowDiscipline=closed.filter(({row})=>checklistScore(row)<.8);
+      document.getElementById("trade-journal-summary").innerHTML = `<div class="trade-stat-grid"><span><small>Trades logged</small><strong>${records.length}</strong></span><span><small>Closed trades</small><strong>${closed.length}</strong></span><span><small>Win rate</small><strong>${closed.length?Math.round(wins.length/closed.length*100):0}%</strong></span><span><small>Net P&amp;L</small><strong>£${total.toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></span><span><small>Avg P&amp;L / trade</small><strong>£${mean.toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></span><span><small>P&amp;L standard deviation</small><strong>£${stdev.toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></span><span><small>Average R</small><strong>${averageR==null?"—":`${averageR.toFixed(2)}R`}</strong></span><span><small>Profit factor</small><strong>${profitFactor==null?(wins.length?"No losses yet":"—"):profitFactor.toFixed(2)}</strong></span><span><small>Max drawdown</small><strong>£${maxDrawdown.toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></span><span><small>Discipline checklist average</small><strong>${disciplinePct}%</strong></span></div><p class="trade-discipline-compare">Avg P&amp;L when checklist ≥80%: ${meanOf(highDiscipline)==null?"—":`£${meanOf(highDiscipline).toFixed(2)} (${highDiscipline.length} trades)`} · below 80%: ${meanOf(lowDiscipline)==null?"—":`£${meanOf(lowDiscipline).toFixed(2)} (${lowDiscipline.length} trades)`}.</p><small>Descriptive statistics only. P&amp;L standard deviation is sample standard deviation across closed trades; it is not annualised or a forecast. Average R excludes percent-only risk entries. Discipline differences are observational, not evidence of causality.</small>`;
+      list.innerHTML = records.length ? records.map(row=>`<article class="trade-journal-row"><div><strong>${escapeHtml(row.market)} · ${escapeHtml(row.direction)}</strong><small>${escapeHtml(row.country)} vs ${escapeHtml(row.comparison)} · ${new Date(row.loggedAt).toLocaleString("en-GB",{dateStyle:"medium",timeStyle:"short"})} · ${escapeHtml(row.points)} · macro snapshot ${escapeHtml(row.macroContext?.capturedAt||"not saved")}</small><details><summary>Review captured macro context and screenshots</summary><p>Rates: ${escapeHtml(row.macroContext?.primary?.rate??"n/a")}% vs ${escapeHtml(row.macroContext?.comparison?.rate??"n/a")}%; inflation: ${escapeHtml(row.macroContext?.primary?.inflation??"n/a")}% vs ${escapeHtml(row.macroContext?.comparison?.inflation??"n/a")}%. Status: ${escapeHtml(row.macroContext?.sourceStatus||"legacy snapshot; provenance unavailable")} Hosted export: ${escapeHtml(row.macroContext?.hostedSnapshotDate||"not recorded")}.</p>${(row.macroContext?.releaseLines||[]).map(line=>`<p>${escapeHtml(line[1])}: ${escapeHtml(line[2])} · ${escapeHtml(line[3])}</p>`).join("")}${(row.macroContext?.headlines||[]).map(item=>`<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">${escapeHtml(item.source)} · ${escapeHtml(item.title)}</a>`).join("<br>")}${Object.entries(row.images||{}).map(([key,blob])=>{const url=URL.createObjectURL(blob);tradeImageUrls.push(url);return `<img class="trade-journal-image" src="${url}" alt="Saved ${key} trade chart screenshot">`;}).join("")}</details></div><span>${row.form["trade-pnl"]!==""&&row.form["trade-pnl"]!=null?`£${escapeHtml(row.form["trade-pnl"])}`:"Open / no P&L"}</span></article>`).join("") : `<p class="empty-state">Your logged trades and screenshots will appear here.</p>`;
+    } catch { document.getElementById("trade-journal-summary").textContent = "Trade journal storage is unavailable in this browser."; }
+  }
+  async function exportTradeJournal() {
+    const records = await readTradeRecords();
+    const columns = ["loggedAt","market","direction","country","comparison","points","selectedPoints","macroSnapshotAt","primaryInflation","comparisonInflation","primaryRate","comparisonRate","trade-date","trade-entry","trade-stop","trade-target","trade-exit-date","trade-exit-price","trade-pips","trade-pnl","discipline-followed-trigger","discipline-kept-stop","discipline-respected-risk","discipline-checked-calendar","discipline-logged-outcome","trade-lessons"];
+    const cell = value => `"${String(value ?? "").replaceAll('"','""')}"`;
+    const metaKeys=["loggedAt","market","direction","country","comparison","points"];
+    const macroKeys={macroSnapshotAt:row=>row.macroContext?.capturedAt,primaryInflation:row=>row.macroContext?.primary?.inflation,comparisonInflation:row=>row.macroContext?.comparison?.inflation,primaryRate:row=>row.macroContext?.primary?.rate,comparisonRate:row=>row.macroContext?.comparison?.rate};
+    const rows = [columns, ...records.map(row=>columns.map(key=>metaKeys.includes(key)?row[key]:key==="selectedPoints"?row.selectedPoints?.join("; "):macroKeys[key]?macroKeys[key](row):row.form[key]))];
+    const blob = new Blob(["\ufeff"+rows.map(row=>row.map(cell).join(",")).join("\r\n")],{type:"text/csv;charset=utf-8"});
+    const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download="macro-trade-journal.csv";link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);
+  }
+  async function restoreTradeImages() {
+    try {
+      const db = await openTradeImageDb();
+      for (const key of Object.keys(tradeImages)) {
+        const blob = await new Promise((resolve, reject) => {
+          const request = db.transaction("images").objectStore("images").get(key);
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+        if (blob) {
+          tradeImages[key] = await new Promise(resolve => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.readAsDataURL(blob); });
+          const preview = document.getElementById(`trade-preview-${key}`);
+          if (preview) preview.innerHTML = `<img src="${tradeImages[key]}" alt="${key} chart preview">`;
+        }
+      }
+    } catch { setTradeSaveStatus("Draft recovered; saved screenshots are unavailable in this browser."); }
+  }
+  function tradeFormSnapshot() {
+    const draft=[...document.querySelectorAll("#trade-sheet-builder input:not([type=file]), #trade-sheet-builder textarea, #trade-sheet-builder select")]
+      .reduce((draft,input)=>{draft[input.id]=input.type==="checkbox"?input.checked:input.value;return draft;},{});
+    ["plan-asset","plan-direction","plan-country","plan-counter-country"].forEach(id=>draft[id]=tradeValue(id));
+    draft.selectedPoints=[...document.querySelectorAll("[data-indicator]:checked")].map(input=>input.dataset.indicator);
+    return draft;
+  }
+
+  function setTradeSaveStatus(message) {
+    const status = document.getElementById("trade-save-status");
+    if (status) status.textContent = message;
+  }
+  function scheduleTradeDraftSave() {
+    clearTimeout(tradeSaveTimer);
+    setTradeSaveStatus("Saving this device’s trade draft…");
+    tradeSaveTimer = setTimeout(() => {
+      try {
+        localStorage.setItem(tradeDraftKey, JSON.stringify(tradeFormSnapshot()));
+        setTradeSaveStatus(`Draft saved on this device at ${new Date().toLocaleTimeString("en-GB", {hour:"2-digit",minute:"2-digit"})}.`);
+      } catch { setTradeSaveStatus("Draft could not be saved. Check available browser storage."); }
+    }, 350);
+  }
+  function resizeTradeScreenshot(file) {
+    return new Promise((resolve, reject) => {
+      const image = new Image(), url = URL.createObjectURL(file);
+      image.onload = () => {
+        const scale = Math.min(1, 1600 / Math.max(image.width, image.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.width * scale)); canvas.height = Math.max(1, Math.round(image.height * scale));
+        canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Screenshot compression failed")), "image/jpeg", 0.78);
+      };
+      image.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Screenshot could not be read")); };
+      image.src = url;
+    });
+  }
   function bindTradeSheet() {
     if (document.getElementById("trade-autofill")?.dataset.bound) return;
     const today = new Date();
     document.getElementById("trade-date").value ||= today.toISOString().slice(0,10);
     document.getElementById("trade-time").value ||= today.toTimeString().slice(0,5);
     document.getElementById("trade-autofill").onclick = fillTradeSheet;
+    document.getElementById("trade-new").onclick = () => startNewTrade();
+    document.getElementById("trade-log").onclick = () => logTrade().catch(() => setTradeSaveStatus("Trade could not be recorded. Check browser storage."));
+    document.getElementById("trade-journal-export").onclick = () => exportTradeJournal().catch(() => setTradeSaveStatus("Journal export could not be created."));
     document.getElementById("trade-print").onclick = () => { const frame=document.createElement("iframe");frame.style.display="none";document.body.appendChild(frame);frame.contentDocument.open();frame.contentDocument.write(tradeSheetDocumentLat());frame.contentDocument.close();setTimeout(()=>{frame.contentWindow.focus();frame.contentWindow.print();setTimeout(()=>frame.remove(),1000)},250); };
     document.getElementById("trade-download").onclick = () => { const blob=new Blob([tradeSheetDocumentLat()],{type:"application/msword"});const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=`LAT-Trade-Sheet-${tradeValue("plan-asset")||"setup"}-${tradeValue("trade-date")||"draft"}.doc`;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000); };
-    [["entry","trade-image-entry"],["management","trade-image-management"],["exit","trade-image-exit"]].forEach(([key,id])=>document.getElementById(id).onchange=event=>{const file=event.target.files?.[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{tradeImages[key]=reader.result;document.getElementById(`trade-preview-${key}`).innerHTML=`<img src="${reader.result}" alt="${key} chart preview">`;};reader.readAsDataURL(file)});
+    try {
+      const saved = JSON.parse(localStorage.getItem(tradeDraftKey) || "{}");
+      document.querySelectorAll("[data-indicator]").forEach(input=>{input.checked=(saved.selectedPoints||[]).includes(input.dataset.indicator);});
+      Object.entries(saved).forEach(([id, value]) => { const field = document.getElementById(id); if (!field) return; if (field.type === "checkbox") field.checked = Boolean(value); else if (value !== "") {if(field.tagName==="SELECT"&&![...field.options].some(o=>o.value===String(value)))field.add(new Option(String(value),String(value)));field.value=value;} });
+    } catch {}
+    if (localStorage.getItem(activeTradeKey)) document.getElementById("trade-log").textContent="Update logged trade";
+    document.querySelectorAll("#trade-sheet-builder input:not([type=file]), #trade-sheet-builder textarea, #trade-sheet-builder select").forEach(input => { input.addEventListener(input.type==="checkbox"||input.tagName==="SELECT"?"change":"input", scheduleTradeDraftSave); });
+    document.querySelectorAll("[data-indicator]").forEach(input => input.addEventListener("change", scheduleTradeDraftSave));
+    const requestedTrade=location.pathname==="/trading-plan"?new URLSearchParams(location.search).get("trade"):null;
+    if(requestedTrade)reopenTrade(requestedTrade);else restoreTradeImages();
+    renderTradeJournal();
+    [["entry","trade-image-entry"],["management","trade-image-management"],["exit","trade-image-exit"]].forEach(([key,id])=>document.getElementById(id).onchange=async event=>{const file=event.target.files?.[0];if(!file)return;if(!file.type.startsWith("image/")){setTradeSaveStatus("Choose an image screenshot.");return;}setTradeSaveStatus("Compressing and saving screenshot…");try{const blob=await resizeTradeScreenshot(file);await storeTradeImage(key,blob);tradeImages[key]=await new Promise(resolve=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.readAsDataURL(blob)});document.getElementById(`trade-preview-${key}`).innerHTML=`<img src="${tradeImages[key]}" alt="${key} chart preview">`;setTradeSaveStatus(`${key[0].toUpperCase()+key.slice(1)} screenshot saved on this device.`);}catch{setTradeSaveStatus("Screenshot could not be saved. Check browser storage permissions.");}});
     document.getElementById("trade-autofill").dataset.bound="true";
   }
 
@@ -468,15 +726,20 @@
       document.querySelectorAll("[data-indicator]").forEach(input => input.addEventListener("change", renderTradingPlan));
       const [initialPrimary,initialCounter]=assetCountryPair(assetSelect.value);countrySelect.value=encodeURIComponent(initialPrimary);counterSelect.value=encodeURIComponent(initialCounter);
       assetSelect.dataset.bound="true";
-    } else if (assetSelect.options.length <= 1 && live.markets?.length) {
+    } else if (!assetSelect.dataset.liveLoaded && live.markets?.length) {
+      const previousAsset=assetSelect.value,previousCountry=countrySelect.value,previousCounter=counterSelect.value;
+      assetSelect.dataset.liveLoaded="true";
       assetSelect.innerHTML = live.markets.map(row => `<option value="${row.symbol}">${row.asset}</option>`).join("");
-      const [primary,counter]=assetCountryPair(assetSelect.value);countrySelect.value=encodeURIComponent(primary);counterSelect.value=encodeURIComponent(counter);
+      if([...assetSelect.options].some(o=>o.value===previousAsset)){assetSelect.value=previousAsset;countrySelect.value=previousCountry;counterSelect.value=previousCounter;}
+      else {const [primary,counter]=assetCountryPair(assetSelect.value);countrySelect.value=encodeURIComponent(primary);counterSelect.value=encodeURIComponent(counter);}
     }
     const item = (live.markets || []).find(row => row.symbol === assetSelect.value) || live.markets?.[0];
     const countryName = decodeURIComponent(countrySelect.value || "United Kingdom");
     const country = markets.find(row => row.market === countryName) || markets[0];
     const counterName=decodeURIComponent(counterSelect.value||"United States"), counter=markets.find(row=>row.market===counterName)||markets[1];
     const direction = document.getElementById("plan-direction").value;
+    const researchLink=document.getElementById("plan-research-link");
+    if(researchLink)researchLink.href=assetSelect.value.includes("Waiting")?"/research":`/research?market=${encodeURIComponent(assetSelect.value)}&direction=${encodeURIComponent(direction)}`;
     const activePoints = [...document.querySelectorAll("[data-indicator]:checked")].reduce((sum,input) => sum + (planIndicators.find(([id])=>id===input.dataset.indicator)?.[2] || 0),0);
     const maxPoints = planIndicators.reduce((sum,item)=>sum+item[2],0);
     const technicalScore = clamp((activePoints/maxPoints)*100);
@@ -523,40 +786,84 @@
     root.innerHTML = items.map(item => `<article class="news-card"><span class="publisher">${item.source || "SOURCE"}${item.publishedAt ? ` · ${new Date(item.publishedAt).toLocaleDateString("en-GB",{day:"2-digit",month:"short"})}` : ""}</span><h3>${item.title}</h3><p><strong>Why it matters:</strong> ${item.explanation || whyItMatters(item.title)}</p><a target="_blank" rel="noopener" href="${item.url}">Read at ${item.source || "source"} ↗</a></article>`).join("");
   }
 
-  async function hydrate() {
-    try { const universeResponse=await fetch(`/api/companies?mode=universe&ts=${Date.now()}`,{cache:"no-store"}); if(universeResponse.ok) companyUniverse=(await universeResponse.json()).universe||[]; } catch {}
-    try {
-      const response = await fetch(`/data/latest-export.json?ui=${Date.now()}`, { cache:"no-store" });
-      hosted = await response.json();
-      const generated = new Date(hosted.generatedAt);
-      const ageHours = Math.max(0, Math.floor((Date.now() - generated.getTime()) / 3600000));
-      document.getElementById("refresh-number").textContent = `#${String(hosted.generatedAt || hosted.date).replace(/\D/g, "").slice(0, 12)}`;
-      document.getElementById("refresh-date").textContent = generated.toLocaleString("en-GB", { dateStyle:"medium", timeStyle:"short" });
-      document.getElementById("refresh-age").textContent = ageHours < 1 ? "Updated less than an hour ago" : `Updated ${ageHours} hour${ageHours === 1 ? "" : "s"} ago`;
-      document.getElementById("news-refresh").textContent = `Refreshed ${hosted.date}`;
-      document.getElementById("landing-news-refresh").textContent = `Refreshed ${hosted.date}`;
-    } catch {
-      document.getElementById("refresh-age").textContent = "Live snapshot temporarily unavailable";
-    }
-    try {
-      const liveResponse = await fetch(`/api/live?ts=${Date.now()}`, { cache:"no-store" });
-      if (liveResponse.ok) live = await liveResponse.json();
-      if (live.generatedAt) {
-        const liveDate = new Date(live.generatedAt);
-        document.getElementById("refresh-number").textContent = `#${String(live.generatedAt).replace(/\D/g, "").slice(0,12)}`;
-        document.getElementById("refresh-date").textContent = liveDate.toLocaleString("en-GB", { dateStyle:"medium", timeStyle:"short" });
-        document.getElementById("refresh-age").textContent = "Live endpoint · five-minute cache";
-        document.getElementById("company-refresh").textContent = `Updated ${liveDate.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}`;
+  function setupCapitalForecast() {
+    const keys=["capital","inflow","outflow","return","volatility","months"];
+    const fields=keys.map(key=>document.getElementById(`forecast-${key}`));
+    if(fields.some(field=>!field))return;
+    const storageKey="macro-capital-scenarios-v1";
+    try { const saved=JSON.parse(localStorage.getItem(storageKey)||"{}"); fields.forEach((field,i)=>{if(saved[keys[i]]!=null)field.value=saved[keys[i]];}); } catch {}
+    let rows=[];
+    const chart3d=new Chart3D(document.getElementById("capital-chart-3d"),{labels:["Month","Monthly return (%)","Capital (£)"],format:p=>`Month ${p.x} · return ${p.y.toFixed(2)}% · capital £${p.z.toFixed(2)} · unfunded withdrawals £${p.unfunded.toFixed(2)}`});
+    function render() {
+      const summary=document.getElementById("forecast-summary"),body=document.getElementById("forecast-rows"),canvas=document.getElementById("forecast-chart"),ctx=canvas.getContext("2d");
+      ctx.clearRect(0,0,canvas.width,canvas.height);rows=[];
+      chart3d.setData([]);document.getElementById("capital-3d-status").textContent="Enter valid cashflow assumptions above.";
+      const values=fields.map(field=>Number(field.value));
+      if(!fields[0].value||values.some(value=>!Number.isFinite(value))||values[0]<0||values[1]<0||values[2]<0||values[4]<0||Math.abs(values[3])+values[4]>100||![3,6,12,24].includes(values[5])) { summary.textContent="Enter valid assumptions. Capital, deposits, withdrawals and sensitivity must be non-negative; absolute return plus sensitivity must stay within 100%.";body.innerHTML="";return; }
+      try { localStorage.setItem(storageKey,JSON.stringify(Object.fromEntries(keys.map((key,i)=>[key,fields[i].value])))); } catch {}
+      const [capital,inflow,outflow,rate,volatility,months]=values,flow=inflow-outflow;
+      const surface=ResearchMath.capitalSurface({capital,deposit:inflow,withdrawal:outflow,rate,spread:volatility,months});
+      if(surface){const cross=surface[0].map((_,i)=>surface.map(line=>line[i]));chart3d.setData(surface.flat(),[...surface,...cross]);document.getElementById("capital-3d-status").textContent=`${surface.length} return scenarios across ${months} months. Inputs are shared with the cashflow table below.`;}
+      let lower=capital,base=capital,upper=capital;
+      for(let month=1;month<=months;month++) {
+        lower=Math.max(0,lower*(1+(rate-volatility)/100)+flow);
+        base=Math.max(0,base*(1+rate/100)+flow);
+        upper=Math.max(0,upper*(1+(rate+volatility)/100)+flow);
+        rows.push({month,flow,lower,base,upper});
       }
-    } catch {
-      document.getElementById("company-refresh").textContent = "Hosted fallback";
+      const money=value=>new Intl.NumberFormat("en-GB",{style:"currency",currency:"GBP",maximumFractionDigits:2}).format(value);
+      summary.textContent=`After ${months} months: base ${money(base)}, lower ${money(lower)}, upper ${money(upper)}. Cashflow is applied at month end. Balances stop at zero; withdrawals beyond available capital are unfunded. These are fixed-return scenarios, not confidence intervals.`;
+      body.innerHTML=rows.map(row=>`<tr><td>${row.month}</td><td>${money(row.flow)}</td><td>${money(row.lower)}</td><td>${money(row.base)}</td><td>${money(row.upper)}</td></tr>`).join("");
+      const series=[{base:capital,lower:capital,upper:capital},...rows],max=Math.max(1,...series.flatMap(row=>[row.lower,row.base,row.upper]));
+      ctx.font="14px sans-serif";
+      [["lower","#b66b36"],["base","#087a55"],["upper","#375a7f"]].forEach(([key,color],index)=>{
+        ctx.strokeStyle=color;ctx.lineWidth=3;ctx.beginPath();series.forEach((row,i)=>{const x=80+i/months*(canvas.width-110),y=canvas.height-35-row[key]/max*(canvas.height-75);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();ctx.fillStyle=color;ctx.fillText(key[0].toUpperCase()+key.slice(1),100+index*160,20);
+      });
+      ctx.fillStyle="#66736d";ctx.fillText("Month 0",65,canvas.height-10);ctx.fillText(`Month ${months}`,canvas.width-90,canvas.height-10);
     }
+    fields.forEach(field=>field.addEventListener("input",render));
+    document.getElementById("forecast-export").addEventListener("click",()=>{
+      if(!rows.length)return;
+      const csv=["Month,Net monthly cashflow GBP,Lower GBP,Base GBP,Upper GBP",...rows.map(row=>[row.month,row.flow,row.lower,row.base,row.upper].join(","))].join("\r\n");
+      const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"})),link=document.createElement("a");link.href=url;link.download="capital-scenarios.csv";link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    });
+    render();
+  }
+  setupCapitalForecast();
+
+  async function fetchJson(path, timeoutMs=12000) {
+    const response=await fetch(`${path}${path.includes("?")?"&":"?"}ts=${Date.now()}`,{cache:"no-store",signal:AbortSignal.timeout(timeoutMs)});
+    if(!response.ok)throw new Error(`${path}: HTTP ${response.status}`);
+    return response.json();
+  }
+  function renderDashboard() {
+    renderCountryGrid();renderMarkets();renderNews();renderLandingNews();renderFullCalendar();renderCompanies();renderTradingPlan();renderOverview();route();
+  }
+  async function hydrate() {
     try {
-      const euroResponse=await fetch(`/api/euro-area?ts=${Date.now()}`,{cache:"no-store"});
-      if(euroResponse.ok){const euro=await euroResponse.json();euro.rows.forEach(item=>{const row=markets.find(market=>market.market===item.market);if(row&&Number.isFinite(item.inflation)){row.inflation=item.inflation;row.inflationSource="Eurostat HICP";row.inflationPeriod=item.period;row.temp=item.inflation>=5?"Hot":item.inflation>=2.5?"Warm":item.inflation<1?"Cool":"Neutral";row.pressure=Math.round(Math.max(25,Math.min(90,42+item.inflation*5)));}});}
-    } catch {}
-    renderCountryGrid();
-    renderMarkets(); renderNews(); renderLandingNews(); renderFullCalendar(); renderCompanies(); renderTradingPlan(); renderOverview(); route();
+      hosted=await fetchJson("/data/latest-export.json",6000);
+      const generated=new Date(hosted.generatedAt),ageHours=Math.max(0,Math.floor((Date.now()-generated.getTime())/3600000));
+      document.getElementById("refresh-number").textContent=`#${String(hosted.generatedAt||hosted.date).replace(/\D/g,"").slice(0,12)}`;
+      document.getElementById("refresh-date").textContent=generated.toLocaleString("en-GB",{dateStyle:"medium",timeStyle:"short"});
+      document.getElementById("refresh-age").textContent=ageHours<1?"Snapshot updated less than an hour ago":`Snapshot updated ${ageHours} hour${ageHours===1?"":"s"} ago`;
+      document.getElementById("news-refresh").textContent=`Snapshot ${hosted.date||"date unavailable"}`;
+      document.getElementById("landing-news-refresh").textContent=`Snapshot ${hosted.date||"date unavailable"}`;
+    } catch { document.getElementById("refresh-age").textContent="Hosted snapshot temporarily unavailable"; }
+
+    // Paint the cached page first. Independent live endpoints then refresh together,
+    // so slow quotes no longer hold the country, calendar, and news views behind them.
+    renderDashboard();
+    const [universeResult,liveResult,euroResult]=await Promise.allSettled([
+      fetchJson("/api/companies?mode=universe",8000),
+      fetchJson("/api/live",10000),
+      fetchJson("/api/euro-area",14000)
+    ]);
+    if(universeResult.status==="fulfilled")companyUniverse=universeResult.value.universe||[];
+    if(liveResult.status==="fulfilled")live=liveResult.value;
+    else document.getElementById("company-refresh").textContent="Live feed unavailable · hosted snapshot";
+    if(live.generatedAt){const liveDate=new Date(live.generatedAt);document.getElementById("company-refresh").textContent=`Updated ${liveDate.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}`;}
+    if(euroResult.status==="fulfilled")euroResult.value.rows?.forEach(item=>{const row=markets.find(market=>market.market===item.market);if(row&&Number.isFinite(item.inflation)){row.inflation=item.inflation;row.inflationSource="Eurostat HICP";row.inflationPeriod=item.period;row.temp=item.inflation>=5?"Hot":item.inflation>=2.5?"Warm":item.inflation<1?"Cool":"Neutral";row.pressure=Math.round(Math.max(25,Math.min(90,42+item.inflation*5)));}});
+    renderDashboard();
   }
 
   renderCountryGrid();
