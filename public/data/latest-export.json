@@ -1,78 +1,78 @@
 {
-  "date": "2026-11-24",
-  "filename": "macro_daily_export_2026-11-24.xlsx",
-  "href": "/daily_exports/macro_daily_export_2026-11-24.xlsx",
-  "generatedAt": "2026-11-24T02:51:54.493Z",
+  "date": "2026-11-25",
+  "filename": "macro_daily_export_2026-11-25.xlsx",
+  "href": "/daily_exports/macro_daily_export_2026-11-25.xlsx",
+  "generatedAt": "2026-11-25T00:34:11.421Z",
   "assets": [
     {
-      "date": "2026-11-24",
+      "date": "2026-11-25",
       "asset": "Australian Dollar",
       "symbol": "AUDUSD=X",
       "convention": "USD per 1 AUD",
-      "open": 0.6632179617881775,
-      "close": 0.6626905202865601,
-      "move": -0.0005274415016174316,
-      "pctMove": -0.000795276262113509
+      "open": 0.66454017162323,
+      "close": 0.6658676266670227,
+      "move": 0.0013274550437927246,
+      "pctMove": 0.0019975542495049847
     },
     {
-      "date": "2026-11-24",
+      "date": "2026-11-25",
       "asset": "Canadian Dollar",
       "symbol": "CAD=X",
       "convention": "USD per 1 CAD",
-      "open": 0.6961945863922082,
-      "close": 0.696378835170825,
-      "move": 0.00018424877861678013,
-      "pctMove": 0.0002646512659221223
+      "open": 0.7010656461780568,
+      "close": 0.7010754309341571,
+      "move": 0.000009784756100361669,
+      "pctMove": 0.00001395697557526887
     },
     {
-      "date": "2026-11-24",
+      "date": "2026-11-25",
       "asset": "Swiss Franc",
       "symbol": "CHF=X",
       "convention": "USD per 1 CHF",
-      "open": 1.1883682929543353,
-      "close": 1.1887496430679365,
-      "move": 0.00038135011360118654,
-      "pctMove": 0.0003209022959145269
+      "open": 1.1977339225905614,
+      "close": 1.1965873485750225,
+      "move": -0.0011465740155389703,
+      "pctMove": -0.0009572860832555152
     },
     {
-      "date": "2026-11-24",
+      "date": "2026-11-25",
       "asset": "Euro",
       "symbol": "EURUSD=X",
       "convention": "USD per 1 EUR",
-      "open": 1.0903936624526978,
-      "close": 1.0915838479995728,
-      "move": 0.001190185546875,
-      "pctMove": 0.0010915191346563269
+      "open": 1.0968520641326904,
+      "close": 1.0964912176132202,
+      "move": -0.00036084651947021484,
+      "pctMove": -0.00032898376296131016
     },
     {
-      "date": "2026-11-24",
+      "date": "2026-11-25",
       "asset": "British Pound",
       "symbol": "GBPUSD=X",
       "convention": "USD per 1 GBP",
-      "open": 1.3036279678344727,
-      "close": 1.3041549921035767,
-      "move": 0.0005270242691040039,
-      "pctMove": 0.0004042750555433017
+      "open": 1.3116130828857422,
+      "close": 1.3110626935958862,
+      "move": -0.000550389289855957,
+      "pctMove": -0.00041962778279480695
     },
     {
-      "date": "2026-11-24",
+      "date": "2026-11-25",
       "asset": "Japanese Yen",
       "symbol": "JPY=X",
       "convention": "USD per 1 JPY",
-      "open": 0.006289782615914601,
-      "close": 0.006292236841423073,
-      "move": 0.0000024542255084719633,
-      "pctMove": 0.0003901924213187691
+      "open": 0.006278724955900618,
+      "close": 0.006278843461101321,
+      "move": 1.1850520070365994e-7,
+      "pctMove": 0.000018874086942233248
     },
     {
-      "date": "2026-11-24",
+      "date": "2026-11-25",
       "asset": "New Zealand Dollar",
       "symbol": "NZDUSD=X",
       "convention": "USD per 1 NZD",
-      "open": 0.5452859997749329,
-      "close": 0.5451076626777649,
-      "move": -0.00017833709716796875,
-      "pctMove": -0.00032705240413577474
+      "open": 0.5480353236198425,
+      "close": 0.5480653643608093,
+      "move": 0.000030040740966796875,
+      "pctMove": 0.00005481533702678121
     },
     {
       "date": "2026-11-24",
@@ -80,69 +80,69 @@
       "symbol": "DX-Y.NYB",
       "convention": "Index points",
       "open": 104.30799865722656,
-      "close": 104.25,
-      "move": -0.0579986572265625,
-      "pctMove": -0.0005560326913869318
+      "close": 103.8479995727539,
+      "move": -0.45999908447265625,
+      "pctMove": -0.00441000776924394
     },
     {
-      "date": "2026-11-24",
+      "date": "2026-11-25",
       "asset": "Gold",
       "symbol": "GC=F",
       "convention": "USD futures price",
-      "open": 3636.39990234375,
-      "close": 3646.60009765625,
-      "move": 10.2001953125,
-      "pctMove": 0.0028050257360103803
+      "open": 3559.300048828125,
+      "close": 3543.300048828125,
+      "move": -16,
+      "pctMove": -0.004495265861406583
     },
     {
-      "date": "2026-11-24",
+      "date": "2026-11-25",
       "asset": "Silver",
       "symbol": "SI=F",
       "convention": "USD futures price",
-      "open": 43.04999923706055,
-      "close": 42.90999984741211,
-      "move": -0.1399993896484375,
-      "pctMove": -0.0032520184002213792
+      "open": 40.79499816894531,
+      "close": 40.64500045776367,
+      "move": -0.14999771118164062,
+      "pctMove": -0.0036768652509910904
     },
     {
-      "date": "2026-11-24",
+      "date": "2026-11-25",
       "asset": "WTI Crude",
       "symbol": "CL=F",
       "convention": "USD futures price",
-      "open": 80.36000061035156,
-      "close": 79.91999816894531,
-      "move": -0.44000244140625,
-      "pctMove": -0.005475391215335246
+      "open": 81.68000030517578,
+      "close": 81.69000244140625,
+      "move": 0.01000213623046875,
+      "pctMove": 0.00012245514438169458
     },
     {
-      "date": "2026-11-24",
+      "date": "2026-11-25",
       "asset": "Brent Crude",
       "symbol": "BZ=F",
       "convention": "USD futures price",
-      "open": 86.83000183105469,
-      "close": 86.33999633789062,
-      "move": -0.4900054931640625,
-      "pctMove": -0.0056432740162492
+      "open": 88.37999725341797,
+      "close": 88.51000213623047,
+      "move": 0.1300048828125,
+      "pctMove": 0.001470976316504391
     },
     {
-      "date": "2026-11-24",
+      "date": "2026-11-25",
       "asset": "Natural Gas",
       "symbol": "NG=F",
       "convention": "USD futures price",
-      "open": 3.5390000343322754,
-      "close": 3.5420000553131104,
-      "move": 0.003000020980834961,
-      "pctMove": 0.0008477030098139604
+      "open": 3.6670000553131104,
+      "close": 3.6760001182556152,
+      "move": 0.009000062942504883,
+      "pctMove": 0.002454339461889221
     },
     {
-      "date": "2026-11-24",
+      "date": "2026-11-25",
       "asset": "Copper",
       "symbol": "HG=F",
       "convention": "USD futures price",
-      "open": 5.616000175476074,
-      "close": 5.557000160217285,
-      "move": -0.05900001525878906,
-      "pctMove": -0.010505700394460415
+      "open": 5.484499931335449,
+      "close": 5.46750020980835,
+      "move": -0.01699972152709961,
+      "pctMove": -0.003099593716825888
     },
     {
       "date": "2026-11-24",
@@ -150,9 +150,9 @@
       "symbol": "ZC=F",
       "convention": "USD futures price",
       "open": 449,
-      "close": 449,
-      "move": 0,
-      "pctMove": 0
+      "close": 450.25,
+      "move": 1.25,
+      "pctMove": 0.0027839643652560753
     },
     {
       "date": "2026-11-24",
@@ -160,9 +160,9 @@
       "symbol": "ZW=F",
       "convention": "USD futures price",
       "open": 595.75,
-      "close": 592,
-      "move": -3.75,
-      "pctMove": -0.006294586655476331
+      "close": 588.75,
+      "move": -7,
+      "pctMove": -0.011749895090222395
     },
     {
       "date": "2026-11-24",
@@ -170,29 +170,29 @@
       "symbol": "ZS=F",
       "convention": "USD futures price",
       "open": 1227.25,
-      "close": 1230.75,
-      "move": 3.5,
-      "pctMove": 0.0028519046649011504
+      "close": 1232.25,
+      "move": 5,
+      "pctMove": 0.0040741495212874845
     },
     {
-      "date": "2026-11-23",
+      "date": "2026-11-24",
       "asset": "Coffee",
       "symbol": "KC=F",
       "convention": "USD futures price",
       "open": 273.75,
-      "close": 267.3500061035156,
-      "move": -6.399993896484375,
-      "pctMove": -0.02337897313784243
+      "close": 260.3999938964844,
+      "move": -13.350006103515625,
+      "pctMove": -0.04876714558361872
     },
     {
-      "date": "2026-11-23",
+      "date": "2026-11-24",
       "asset": "Cocoa",
       "symbol": "CC=F",
       "convention": "USD futures price",
       "open": 5164,
-      "close": 5281,
-      "move": 117,
-      "pctMove": 0.022656855151045763
+      "close": 5444,
+      "move": 280,
+      "pctMove": 0.0542215336948102
     }
   ],
   "calendarLines": [
@@ -254,6 +254,12 @@
     },
     {
       "source": "Reuters",
+      "title": "December rate hike may not be enough but not in a rush to move again: ECB's Simkus",
+      "url": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxQRFlkZVZKRk9QVlZVX0hUNXZSMWNqTG1oVXZ2cmw4V1VOMUMxV2NVS0djLTQ1M18wLXp6cE5iWkxSMzNwd0lyVHhETVNQY2Ffd25LVzQ1TUctV3E4YWRLZkNpSEhCZTJwMVBkc2RTZDgwSU9OX0lSOTFwY0xFd2hQVHdwVnhIeHhhWXJRZmtlNllyLUs3ZGJmakNCUTBGWGJ6Wk1za2IxMkIzZXhuUFk3eVIzQUpVVEFM?oc=5",
+      "publishedAt": "2026-11-23T09:01:41.000Z"
+    },
+    {
+      "source": "Reuters",
       "title": "The snowballing selloff in global markets",
       "url": "https://news.google.com/rss/articles/CBMif0FVX3lxTE84ZFFzbDlRd0J6aHAxMkFGQUl6R2swRWt1ZTFUNWhNZlB1Q3VTMFlIcWNUUWpvZGY4TjdodG9qYkw5eVZiaENISVhjZlVQNy1RRjZ2QktKOER1d3lNOUxyOTc3aThONVdUU3VmX19fMnl2ZmpZeG1idEFGR1BkMlk?oc=5",
       "publishedAt": "2026-11-20T15:13:44.000Z"
@@ -265,16 +271,10 @@
       "publishedAt": "2026-11-20T11:26:42.000Z"
     },
     {
-      "source": "Reuters",
-      "title": "Global inflation calls for monetary policy tightening in many economies, IMF head says",
-      "url": "https://news.google.com/rss/articles/CBMivAFBVV95cUxNek12QlczdG01emR1MWtEdU8zWXFZalNKUWE3cDR4Vm9YbFNVaU51Y3RxT0Ywak8yV2FrSUQxelVFRDBRZlFwblRqMWctbmw5TUFja2xjSEh3UW1PQUJtTEVmb0FkMVpoYkg0UWVFYkNOZXhSSU54RUJxOTVOdDNQaEk4N2FqUjdWQjNpSk1yZndSZjhzcURKc2dUT2RLOUVqb3dwUGExZG1KUm4tdk05VzBDN0N4SGhvbFdxZg?oc=5",
-      "publishedAt": "2026-11-19T02:50:50.000Z"
-    },
-    {
       "source": "Trading Economics",
-      "title": "Brent oil - Price - Chart - Historical Data - News",
-      "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE1OT3hGOGZhOGVKeEZkOFpyU1ZIVFpsOFRtQXVCTWl3ak5xejdtanhSUEVRZkZPb0I0QjIybnB5aFF2bWxUQXpIRGw0S3R0S0JFeFZRNlRQeFVoMGVNWE9OTEFqbkI?oc=5",
-      "publishedAt": "2017-05-27T00:14:36.000Z"
+      "title": "UK Natural Gas - Price - Chart - Historical Data - News",
+      "url": "https://news.google.com/rss/articles/CBMiY0FVX3lxTE1odGd2VEJOZ1RGYWxreWdaZjZBQWMwMDhXdnNBa015Y0ZNQ04za2pCdkcxcEhsQXFLSFozSkppY003YlQyS0c5X0JMYW9mWW9MWnBmMUNzR3pfNEkxNlpfd0JQUQ?oc=5",
+      "publishedAt": "2021-10-06T19:27:05.000Z"
     },
     {
       "source": "Trading Economics",
